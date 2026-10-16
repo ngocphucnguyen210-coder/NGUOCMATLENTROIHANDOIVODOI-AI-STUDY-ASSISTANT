@@ -2,3 +2,4 @@ streamlit
 requests
 Pillow
 audio-recorder-streamlit
+duckduckgo-search
