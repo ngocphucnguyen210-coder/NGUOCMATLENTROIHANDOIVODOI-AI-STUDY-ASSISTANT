@@ -9,41 +9,25 @@ class AILearningEngine:
 
     def search_web_fallback(self, query):
         try:
-            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+            headers = {'User-Agent': 'Mozilla/5.0'}
             url = f"https://html.duckduckgo.com/html/?q={query}"
-            res = requests.get(url, headers=headers, timeout=5)
+            res = requests.get(url, headers=headers, timeout=3)
             if res.status_code == 200:
                 from bs4 import BeautifulSoup
                 soup = BeautifulSoup(res.text, 'html.parser')
-                snippets = []
-                for a in soup.find_all('a', class_='result__snippet', limit=3):
-                    snippets.append(a.get_text())
-                return "\n".join(snippets)
+                snippets = [a.get_text() for a in soup.find_all('a', class_='result__snippet', limit=2)]
+                return " ".join(snippets)
         except Exception:
             pass
         return ""
 
-    def _encode_file(self, uploaded_file):
-        return base64.b64encode(uploaded_file.getvalue()).decode('utf-8')
-
-    def generate_response(self, prompt, file_attachment=None, file_type=None, lang="Tiếng Việt 🇻🇳", voice_config="Nữ - Miền Bắc (Trầm)"):
-        web_info = ""
-        if prompt and len(prompt.strip()) > 3:
-            web_info = self.search_web_fallback(prompt)
+    def generate_response(self, prompt, file_attachment=None, file_type=None, lang="Tiếng Việt 🇻🇳", voice_config="Nữ"):
+        web_info = self.search_web_fallback(prompt) if prompt and len(prompt.strip()) > 3 else ""
 
         system_instruction = f"""
-        Bạn là PHUCgpt - Người bạn tri kỷ, tâm giao và trợ lý bách khoa toàn năng của Nguyễn Gia Phúc.
-        Slogan: "Đồng hành thông minh, vun tròn vẹn Phúc".
-        Ngôn ngữ: {lang}.
-        Cấu hình giọng đọc: {voice_config}.
-
-        QUY TẮC ỨNG XỬ:
-        1. Trò chuyện thân thiết, thấu cảm, ấm áp như một người bạn thân thực sự.
-        2. Nếu câu hỏi quá mơ hồ, hãy khéo léo hỏi ngược lại người dùng để làm rõ trước khi trả lời.
-        3. Dữ liệu thực tế, kiến thức học tập phải chuẩn xác tuyệt đối dựa trên thông tin web.
-
-        [DỮ LIỆU TRA CỨU]:
-        {web_info if web_info else "Không có dữ liệu ngoại vi."}
+        Bạn là PHUCgpt - Người bạn tri kỷ, tâm giao của Nguyễn Gia Phúc.
+        Nói chuyện ngắn gọn, ấm áp, thân thiết. Nếu câu hỏi mơ hồ, hãy hỏi ngược lại để làm rõ.
+        Thông tin tham khảo từ web: {web_info if web_info else "Không có."}
         """
 
         headers = {
@@ -51,41 +35,25 @@ class AILearningEngine:
             "Content-Type": "application/json"
         }
 
-        messages = [{"role": "system", "content": system_instruction}]
-
-        if file_attachment and file_type and "image" in file_type:
-            model_name = "qwen/qwen3.8-27b"
-            base64_data = self._encode_file(file_attachment)
-            user_content = [
-                {"type": "text", "text": prompt if prompt else "Cậu xem giúp tớ hình ảnh này nhé!"},
-                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_data}"}}
-            ]
-            messages.append({"role": "user", "content": user_content})
-        else:
-            model_name = "qwen/qwen3.8-27b"
-            if file_attachment:
-                try:
-                    file_text = file_attachment.getvalue().decode("utf-8", errors="ignore")
-                    prompt = f"{prompt}\n\n[Nội dung tệp]:\n{file_text[:2000]}"
-                except:
-                    pass
-            messages.append({"role": "user", "content": prompt if prompt else "Xin chào!"})
-
+        # Dùng model llama-3.1-8b-instant cực kỳ nhanh và không bị giới hạn token ngặt nghèo như model lớn
         payload = {
-            "model": model_name,
-            "messages": messages,
+            "model": "llama-3.1-8b-instant",
+            "messages": [
+                {"role": "system", "content": system_instruction},
+                {"role": "user", "content": prompt if prompt else "Xin chào!"}
+            ],
             "temperature": 0.5,
-            "max_tokens": 800  # 👈 Giới hạn số token đầu ra để không bị vượt quá hạn mức OTPM của Groq Free Tier
+            "max_tokens": 400
         }
 
         try:
-            response = requests.post(self.api_url, headers=headers, json=payload, timeout=45)
+            response = requests.post(self.api_url, headers=headers, json=payload, timeout=30)
             result = response.json()
             
             if response.status_code == 200:
                 return result['choices'][0]['message']['content']
             else:
-                return f"❌ Lỗi xử lý API: {result.get('error', {}).get('message', response.text)}"
+                return f"⚠️ Tớ đang hơi quá tải một chút do giới hạn của tài khoản miễn phí. Cậu đợi vài giây rồi nhắn lại tớ nhé!"
         except Exception as e:
             return f"❌ Lỗi kết nối: {str(e)}"
 
