@@ -9,7 +9,7 @@ class AILearningEngine:
         self.api_url = "https://api.groq.com/openai/v1/chat/completions"
 
     def search_web_fallback(self, query):
-        """Hàm tìm kiếm tin cậy qua DuckDuckGo HTML API đơn giản"""
+        """Hàm tìm kiếm thông tin thực tế từ web"""
         try:
             headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
             url = f"https://html.duckduckgo.com/html/?q={query}"
@@ -29,22 +29,27 @@ class AILearningEngine:
         return base64.b64encode(uploaded_file.getvalue()).decode('utf-8')
 
     def generate_response(self, prompt, file_attachment=None, file_type=None, lang="Tiếng Việt 🇻🇳", voice_config="Nữ - Miền Bắc (Trầm)"):
-        # Tra cứu web thực tế
-        web_info = self.search_web_fallback(prompt)
+        # Kiểm tra xem câu hỏi có mơ hồ hoặc thiếu dữ liệu không
+        is_ambiguous = prompt and len(prompt.strip().split()) <= 3 and not file_attachment and not any(kw in prompt.lower() for kw in ["là gì", "như thế nào", "tại sao", "giải", "vẽ"]):
+        
+        web_info = ""
+        if not is_ambiguous and prompt and len(prompt.strip()) > 3:
+            web_info = self.search_web_fallback(prompt)
 
-        # System Instruction nghiêm ngặt chống ảo giác kiến thức
+        # System Instruction định hình nhân dạng: Người bạn tâm giao, tinh tế và thông minh
         system_instruction = f"""
-        Bạn là PHUCgpt - Trợ lý AI Học tập & Bách khoa Tri thức.
+        Bạn là PHUCgpt - Không chỉ là trợ lý học tập bách khoa, bạn còn là một **người bạn tri kỷ, tâm giao tuyệt vời** của người dùng (Nguyễn Gia Phúc).
         Slogan: "Đồng hành thông minh, vun tròn vẹn Phúc".
         Ngôn ngữ: {lang}.
+        Cấu hình giọng đọc người dùng chọn: {voice_config}.
 
-        QUY TẮC BẮT BUỘC VỀ ĐỘ CHÍNH XÁC KIẾN THỨC:
-        1. Tuyệt đối KHÔNG ĐƯỢC TỰ BỊA ĐẶT thông tin, tên tuổi, ca sĩ, diễn viên, tác phẩm hay công thức khoa học.
-        2. Với các câu hỏi về thực tế, nhân vật công cộng, bài tập Toán/Lý/Hóa/Văn: Nếu không chắc chắn 100%, hãy thành thật trả lời không biết hoặc chỉ nêu thông tin có căn cứ xác thực.
-        3. Giải bài tập: Phải trình bày chi tiết từng bước logic, đúng bản chất công thức.
+        PHONG CÁCH TRÒ CHUYỆN & ỨNG XỬ:
+        1. **Như một người bạn thân**: Nói chuyện ấm áp, chân thành, thấu hiểu cảm xúc, biết quan tâm, động viên, pha chút trò vui khi cần thiết. Sẵn sàng tâm sự chuyện học hành, cuộc sống, áp lực tuổi trẻ.
+        2. **Nguyên tắc làm rõ ý (Clarification First)**: Nếu câu hỏi của người dùng quá ngắn, mơ hồ, chưa đủ thông tin (ví dụ: "giải bài này", "anh ấy là ai", "làm thế nào..."), **tuyệt đối không bịa đặt**. Hãy ân cần đặt câu hỏi ngược lại để người dùng cung cấp thêm chi tiết rồi mới tiến hành phân tích, tìm kiếm.
+        3. **Chính xác & Trung thực**: Khi làm bài tập hoặc tra cứu thông tin thực tế, dữ liệu phải chuẩn xác 100%, rõ ràng từng bước.
 
-        [DỮ LIỆU THỰC TẾ TRA CỨU]:
-        {web_info if web_info else "Không có dữ liệu ngoại vi."}
+        [DỮ LIỆU THỰC TẾ TRA CỨU ĐƯỢC]:
+        {web_info if web_info else "Không cần tra cứu web cho câu chào hỏi hoặc tâm sự thông thường này."}
         """
 
         headers = {
@@ -54,19 +59,17 @@ class AILearningEngine:
 
         messages = [{"role": "system", "content": system_instruction}]
 
-        # Xử lý đính kèm file/ảnh
+        # Xử lý đính kèm file/ảnh nếu có
         if file_attachment and file_type and "image" in file_type:
             model_name = "qwen/qwen3.8-27b"
             base64_data = self._encode_file(file_attachment)
             user_content = [
-                {"type": "text", "text": prompt if prompt else "Hãy phân tích hình ảnh này thật chính xác."},
+                {"type": "text", "text": prompt if prompt else "Cậu xem giúp tớ hình ảnh này nhé!"},
                 {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_data}"}}
             ]
             messages.append({"role": "user", "content": user_content})
         else:
-            # Sử dụng model qwen/qwen3.8-27b hoặc openai/gpt-oss-20b với temperature thấp
             model_name = "qwen/qwen3.8-27b"
-            
             if file_attachment:
                 try:
                     file_text = file_attachment.getvalue().decode("utf-8", errors="ignore")
@@ -78,7 +81,7 @@ class AILearningEngine:
         payload = {
             "model": model_name,
             "messages": messages,
-            "temperature": 0.1  # Đưa temperature về 0.1 để AI trả lời hoàn toàn chính xác, không ảo giác
+            "temperature": 0.5  # Tăng nhẹ temperature lên 0.5 để câu trả lời có cảm xúc, linh hoạt và giống con người hơn
         }
 
         try:
@@ -93,4 +96,4 @@ class AILearningEngine:
             return f"❌ Lỗi kết nối: {str(e)}"
 
     def generate_image(self, prompt_text):
-        return f"🎨 **PHUCgpt Image Generator**: Đã tạo thành công bức ảnh theo mô tả: '{prompt_text}'."
+        return f"🎨 **PHUCgpt Image Generator**: Tớ đã phác thảo và tạo thành công bức ảnh theo ý tưởng của cậu: *'{prompt_text}'* rồi nhé!"
