@@ -5,7 +5,7 @@ from google.genai import types
 
 class AILearningEngine:
     def __init__(self):
-        api_key = "AIzaSyBw-EXAMPLE_KEY_FOR_TESTING_PURPOSES_12345"
+        api_key = "AQ.Ab8RN6K3RgiUMj9d4NJ1zNypKiYdh7T7uG7Zly205eT9HGL7IQ"
         # 1. Ưu tiên đọc từ Streamlit Secrets trên Cloud
         try:
             if "GEMINI_API_KEY" in st.secrets:
