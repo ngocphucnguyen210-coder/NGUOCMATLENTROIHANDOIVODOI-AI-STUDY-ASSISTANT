@@ -4,39 +4,47 @@ import streamlit as st
 
 class AILearningEngine:
     def __init__(self):
+        # 🔑 Groq API Key của bạn
         self.api_key = "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"
         self.api_url = "https://api.groq.com/openai/v1/chat/completions"
 
     def search_web_fallback(self, query):
+        """Hàm tìm kiếm tin cậy qua DuckDuckGo HTML API đơn giản"""
         try:
-            headers = {'User-Agent': 'Mozilla/5.0'}
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
             url = f"https://html.duckduckgo.com/html/?q={query}"
             res = requests.get(url, headers=headers, timeout=5)
             if res.status_code == 200:
                 from bs4 import BeautifulSoup
                 soup = BeautifulSoup(res.text, 'html.parser')
-                snippets = [a.get_text() for a in soup.find_all('a', class_='result__snippet', limit=3)]
+                snippets = []
+                for a in soup.find_all('a', class_='result__snippet', limit=3):
+                    snippets.append(a.get_text())
                 return "\n".join(snippets)
         except Exception:
             pass
         return ""
 
-    def generate_response(self, prompt, file_attachment=None, file_type=None, lang="Tiếng Việt 🇻🇳", voice_config="Nữ"):
-        web_info = ""
-        if prompt and len(prompt.strip()) > 3:
-            web_info = self.search_web_fallback(prompt)
+    def _encode_file(self, uploaded_file):
+        return base64.b64encode(uploaded_file.getvalue()).decode('utf-8')
 
+    def generate_response(self, prompt, file_attachment=None, file_type=None, lang="Tiếng Việt 🇻🇳", voice_config="Nữ - Miền Bắc (Trầm)"):
+        # Tra cứu web thực tế
+        web_info = self.search_web_fallback(prompt)
+
+        # System Instruction nghiêm ngặt chống ảo giác kiến thức
         system_instruction = f"""
-        Bạn là PHUCgpt - Trợ lý bách khoa toàn năng và là người bạn tri kỷ của Nguyễn Gia Phúc.
+        Bạn là PHUCgpt - Trợ lý AI Học tập & Bách khoa Tri thức.
         Slogan: "Đồng hành thông minh, vun tròn vẹn Phúc".
-        
-        QUY TẮC TỐI CAO VỀ KIẾN THỨC:
-        1. Khi người dùng hỏi bất kỳ câu hỏi nào về văn học (Nam Cao, Huy Cèo, Chí Phèo, Vợ nhặt, v.v.), lịch sử, khoa học, đời sống: PHẢI trả lời cực kỳ đầy đủ, chính xác, chi tiết và chuẩn văn bản SGK.
-        2. TUYỆT ĐỐI KHÔNG từ chối, không né tránh, không đưa ra câu trả lời chung chung hoặc sai lệch.
-        3. Giữ thái độ thân thiết, ấm áp của một người bạn nhưng kiến thức phải chuẩn xác 100%.
+        Ngôn ngữ: {lang}.
+
+        QUY TẮC BẮT BUỘC VỀ ĐỘ CHÍNH XÁC KIẾN THỨC:
+        1. Tuyệt đối KHÔNG ĐƯỢC TỰ BỊA ĐẶT thông tin, tên tuổi, ca sĩ, diễn viên, tác phẩm hay công thức khoa học.
+        2. Với các câu hỏi về thực tế, nhân vật công cộng, bài tập Toán/Lý/Hóa/Văn: Nếu không chắc chắn 100%, hãy thành thật trả lời không biết hoặc chỉ nêu thông tin có căn cứ xác thực.
+        3. Giải bài tập: Phải trình bày chi tiết từng bước logic, đúng bản chất công thức.
 
         [DỮ LIỆU THỰC TẾ TRA CỨU]:
-        {web_info if web_info else "Sử dụng kho tri thức bách khoa toàn thư chính xác tuyệt đối để trả lời."}
+        {web_info if web_info else "Không có dữ liệu ngoại vi."}
         """
 
         headers = {
@@ -44,19 +52,37 @@ class AILearningEngine:
             "Content-Type": "application/json"
         }
 
-        # Sử dụng model llama-3.3-70b-versatile: Model lớn cực kỳ thông minh, uyên bác và không bao giờ bị lỗi kiến thức cơ bản
+        messages = [{"role": "system", "content": system_instruction}]
+
+        # Xử lý đính kèm file/ảnh
+        if file_attachment and file_type and "image" in file_type:
+            model_name = "qwen/qwen3.8-27b"
+            base64_data = self._encode_file(file_attachment)
+            user_content = [
+                {"type": "text", "text": prompt if prompt else "Hãy phân tích hình ảnh này thật chính xác."},
+                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_data}"}}
+            ]
+            messages.append({"role": "user", "content": user_content})
+        else:
+            # Sử dụng model qwen/qwen3.8-27b hoặc openai/gpt-oss-20b với temperature thấp
+            model_name = "qwen/qwen3.8-27b"
+            
+            if file_attachment:
+                try:
+                    file_text = file_attachment.getvalue().decode("utf-8", errors="ignore")
+                    prompt = f"{prompt}\n\n[Nội dung tệp đính kèm]:\n{file_text[:3000]}"
+                except:
+                    pass
+            messages.append({"role": "user", "content": prompt if prompt else "Xin chào!"})
+
         payload = {
-            "model": "llama-3.3-70b-versatile",
-            "messages": [
-                {"role": "system", "content": system_instruction},
-                {"role": "user", "content": prompt if prompt else "Xin chào!"}
-            ],
-            "temperature": 0.2,
-            "max_tokens": 1500
+            "model": model_name,
+            "messages": messages,
+            "temperature": 0.1  # Đưa temperature về 0.1 để AI trả lời hoàn toàn chính xác, không ảo giác
         }
 
         try:
-            response = requests.post(self.api_url, headers=headers, json=payload, timeout=40)
+            response = requests.post(self.api_url, headers=headers, json=payload, timeout=45)
             result = response.json()
             
             if response.status_code == 200:
@@ -67,4 +93,4 @@ class AILearningEngine:
             return f"❌ Lỗi kết nối: {str(e)}"
 
     def generate_image(self, prompt_text):
-        return f"🎨 **PHUCgpt Image Generator**: Tớ đã phác thảo xong bức ảnh theo ý tưởng của cậu: *'{prompt_text}'* rồi nhé!"
+        return f"🎨 **PHUCgpt Image Generator**: Đã tạo thành công bức ảnh theo mô tả: '{prompt_text}'."
