@@ -1,0 +1,9 @@
+Plaintext
+streamlit>=1.35.0
+google-genai>=0.1.0
+opencv-python-headless
+pillow
+edge-tts
+asyncio
+sqlite3-api
+python-dotenv
