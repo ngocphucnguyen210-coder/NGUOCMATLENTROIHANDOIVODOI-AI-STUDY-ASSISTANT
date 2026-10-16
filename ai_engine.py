@@ -4,7 +4,7 @@ import streamlit as st
 
 class AILearningEngine:
     def __init__(self):
-        # 🔑 Giữ nguyên mã Groq API Key của bạn ở đây
+        # 🔑 Giữ nguyên mã Groq API Key của bạn
         self.api_key = "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"
         self.api_url = "https://api.groq.com/openai/v1/chat/completions"
 
@@ -26,8 +26,8 @@ class AILearningEngine:
         messages = [{"role": "system", "content": system_instruction}]
 
         if image:
-            # Model Vision đọc ảnh chuẩn của Groq
-            model_name = "llama-3.2-11b-vision-preview"
+            # Model Vision đa năng Qwen 3.8 27B mới nhất từ Groq
+            model_name = "qwen/qwen3.8-27b"
             base64_image = self._encode_image(image)
             user_content = [
                 {"type": "text", "text": prompt if prompt else "Hãy giải bài tập hoặc phân tích hình ảnh này."},
@@ -35,8 +35,8 @@ class AILearningEngine:
             ]
             messages.append({"role": "user", "content": user_content})
         else:
-            # Dùng model llama3-8b-8192 siêu ổn định, mọi tài khoản đều chạy được
-            model_name = "llama3-8b-8192"
+            # Model GPT-OSS 20B siêu tốc độ và chính xác
+            model_name = "openai/gpt-oss-20b"
             messages.append({"role": "user", "content": prompt if prompt else "Xin chào!"})
 
         payload = {
