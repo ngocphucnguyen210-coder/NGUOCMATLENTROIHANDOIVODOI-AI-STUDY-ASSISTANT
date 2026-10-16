@@ -7,11 +7,100 @@ from ai_engine import AILearningEngine
 st.set_page_config(
     page_title="PHUCgpt - Đồng Hành Thông Minh",
     page_icon="🌸",
-    layout="wide",
+    layout="centered",
     initial_sidebar_state="expanded"
 )
 
-# 2. Khởi tạo Database SQLite để lưu lịch sử chat vĩnh viễn
+# 2. CSS Tùy chỉnh giao diện Sang trọng, Hiện đại & Hồng Pastel cao cấp
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+    
+    html, body, [class*="css"] {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    /* Nền ứng dụng hồng pastel dịu mắt, cao cấp */
+    .stApp {
+        background: linear-gradient(135deg, #FFF0F5 0%, #FFE4E1 100%);
+    }
+
+    /* Tiêu đề Header sang trọng */
+    .header-container {
+        text-align: center;
+        padding: 20px 0px 10px 0px;
+    }
+    .brand-title {
+        font-size: 42px;
+        font-weight: 800;
+        background: linear-gradient(90deg, #D81B60, #FF69B4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: -1px;
+        margin-bottom: 0px;
+    }
+    .brand-slogan {
+        color: #AD1457;
+        font-size: 15px;
+        font-weight: 500;
+        font-style: italic;
+        margin-top: 5px;
+    }
+
+    /* Khung chat người dùng (Hiện đại, bo góc mềm mại) */
+    [data-testid="stChatMessageUser"] {
+        background: linear-gradient(135deg, #FF80AB 0%, #FF4081 100%) !important;
+        color: white !important;
+        border-radius: 20px 20px 4px 20px !important;
+        padding: 14px 18px !important;
+        box-shadow: 0 4px 15px rgba(255, 64, 129, 0.2);
+    }
+
+    /* Khung chat AI (Trắng tinh tế, có viền hồng mờ) */
+    [data-testid="stChatMessageBot"] {
+        background-color: #FFFFFF !important;
+        color: #2D3748 !important;
+        border: 1px solid rgba(255, 182, 193, 0.5) !important;
+        border-radius: 20px 20px 20px 4px !important;
+        padding: 16px 20px !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    }
+
+    /* Sidebar sang trọng */
+    [data-testid="stSidebar"] {
+        background-color: rgba(255, 255, 255, 0.85) !important;
+        backdrop-filter: blur(10px);
+        border-right: 1px solid rgba(255, 182, 193, 0.4);
+    }
+
+    /* Nút bấm hiện đại, hiệu ứng mượt */
+    .stButton>button {
+        background: linear-gradient(135deg, #FF4081 0%, #D81B60 100%) !important;
+        color: white !important;
+        border-radius: 14px !important;
+        border: none !important;
+        font-weight: 600 !important;
+        padding: 10px 20px;
+        box-shadow: 0 4px 12px rgba(216, 27, 96, 0.25);
+        transition: all 0.3s ease;
+    }
+    .stButton>button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(216, 27, 96, 0.35);
+    }
+
+    /* Ô nhập chat lơ lửng, cao cấp */
+    .stChatInputContainer {
+        border-radius: 24px !important;
+        border: 2px solid #FFB6C1 !important;
+        background-color: rgba(255, 255, 255, 0.9) !important;
+        box-shadow: 0 8px 30px rgba(255, 182, 193, 0.2) !important;
+        padding: 4px 10px !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# 3. Khởi tạo Database SQLite lưu lịch sử
 def init_db():
     conn = sqlite3.connect('phucgpt_history.db', check_same_thread=False)
     c = conn.cursor()
@@ -43,76 +132,18 @@ def clear_db():
     c.execute("DELETE FROM chats")
     conn.commit()
 
-# 3. CSS Giao diện Hồng Pastel sắc nét
-st.markdown("""
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    
-    html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
-    }
-    .stApp {
-        background-color: #FFF5F7;
-    }
-    .main-header {
-        text-align: center;
-        padding: 5px 0px 15px 0px;
-    }
-    .main-title {
-        color: #D81B60;
-        font-size: 36px;
-        font-weight: 700;
-    }
-    .main-slogan {
-        color: #AD1457;
-        font-size: 15px;
-        font-weight: 500;
-        font-style: italic;
-    }
-    [data-testid="stChatMessageUser"] {
-        background-color: #F8BBD0 !important;
-        color: #4A148C !important;
-        border-radius: 18px 18px 2px 18px !important;
-    }
-    [data-testid="stChatMessageBot"] {
-        background-color: #FFFFFF !important;
-        color: #212121 !important;
-        border: 1px solid #F48FB1 !important;
-        border-radius: 18px 18px 18px 2px !important;
-    }
-    [data-testid="stSidebar"] {
-        background-color: #FCE4EC !important;
-        border-right: 1px solid #F8BBD0;
-    }
-    .stButton>button {
-        background-color: #EC407A !important;
-        color: white !important;
-        border-radius: 12px !important;
-        border: none !important;
-        font-weight: 600 !important;
-    }
-    .stButton>button:hover {
-        background-color: #D81B60 !important;
-    }
-</style>
-""", unsafe_allow_html=True)
-
 # 4. Khởi tạo AI Engine
-@st.cache_resource
-def load_engine():
-    return AILearningEngine()
+ai_engine = AILearningEngine()
 
-ai_engine = load_engine()
-
-# 5. Thanh Sidebar Điều Hướng & Tính Năng Mở rộng
+# 5. Thanh Sidebar điều hướng hiện đại
 with st.sidebar:
-    st.markdown("<h2 style='color: #C2185B; text-align: center;'>🌸 PHUCgpt</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #880E4F; font-size: 13px;'>Đồng hành thông minh, vun tròn vẹn Phúc</p>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color: #D81B60; text-align: center; font-weight: 800;'>🌸 PHUCgpt</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #AD1457; font-size: 13px; font-weight: 500;'>Đồng hành thông minh, vun tròn vẹn Phúc</p>", unsafe_allow_html=True)
     st.markdown("---")
     
     st.subheader("🎯 Chọn chủ đề học tập:")
     mode = st.radio(
-        "Lĩnh vực:",
+        "Lĩnh vực chuyên sâu:",
         ["📐 Giải bài tập tự nhiên", "📖 Văn học & Xã hội", "🇬🇧 IELTS & Ngoại ngữ", "💡 Tri thức bách khoa"],
         index=3
     )
@@ -124,41 +155,41 @@ with st.sidebar:
         st.image(uploaded_image, caption="Xem trước ảnh", use_container_width=True)
 
     st.markdown("---")
-    if st.button("🗑️ Xóa toàn bộ lịch sử (DB)", use_container_width=True):
+    if st.button("🗑️ Xóa lịch sử trò chuyện", use_container_width=True):
         clear_db()
         st.rerun()
 
-# 6. Giao diện chính
+# 6. Giao diện Header chính
 st.markdown("""
-    <div class="main-header">
-        <div class="main-title">PHUCgpt</div>
-        <div class="main-slogan">"Đồng hành thông minh, vun tròn vẹn Phúc"</div>
+    <div class="header-container">
+        <div class="brand-title">PHUCgpt</div>
+        <div class="brand-slogan">"Đồng hành thông minh, vun tròn vẹn Phúc"</div>
     </div>
 """, unsafe_allow_html=True)
 
-# 7. Tải lịch sử chat từ Database
+st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
+
+# 7. Tải và hiển thị lịch sử trò chuyện
 messages = load_messages_from_db()
 if not messages:
-    messages = [{"role": "bot", "content": "Xin chào! Mình là **PHUCgpt**. Bạn cần giải bài tập hay tra cứu kiến thức gì hôm nay?"}]
+    messages = [{"role": "bot", "content": "Xin chào! Mình là **PHUCgpt** - Trợ lý thông minh của bạn. Hôm nay bạn muốn chinh phục kiến thức hoặc bài tập gì nào?"}]
 
 for msg in messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# 8. Xử lý tin nhắn người dùng
-prompt = st.chat_input("Hỏi PHUCgpt bất kỳ câu hỏi hoặc bài tập nào...")
+# 8. Xử lý tin nhắn nhập vào từ người dùng
+prompt = st.chat_input("Nhập câu hỏi hoặc yêu cầu bài tập của bạn...")
 
 if prompt:
-    # Lưu tin nhắn user vào DB
     save_message_to_db("user", prompt)
     with st.chat_message("user"):
         if uploaded_image:
-            st.image(uploaded_image, caption="Ảnh đính kèm", width=300)
+            st.image(uploaded_image, caption="Ảnh đính kèm", width=280)
         st.markdown(prompt)
 
-    # Gọi AI trả lời và lưu vào DB
     with st.chat_message("bot"):
-        with st.spinner("PHUCgpt đang phân tích..."):
+        with st.spinner("PHUCgpt đang phân tích và tổng hợp tri thức..."):
             full_prompt = f"[{mode}] {prompt}"
             response = ai_engine.generate_response(prompt=full_prompt, image=uploaded_image)
             st.markdown(response)
