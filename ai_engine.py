@@ -1,25 +1,15 @@
-import os
 import streamlit as st
 from google import genai
 from google.genai import types
 
 class AILearningEngine:
     def __init__(self):
-        # Lấy API Key an toàn từ Streamlit Secrets hoặc biến môi trường
-        api_key = None
-        try:
-            if "GEMINI_API_KEY" in st.secrets:
-                api_key = st.secrets["GEMINI_API_KEY"]
-        except Exception:
-            pass
+        # Gán trực tiếp API Key tại đây để bỏ qua lỗi cấu hình
+        api_key = "DÁN_API_KEY_CỦA_BẠN_VÀO_ĐÂY"
             
-        if not api_key:
-            api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key or "DÁN_API_KEY" in api_key:
+            raise ValueError("Vui lòng điền API Key vào file ai_engine.py!")
             
-        if not api_key:
-            raise ValueError("Chưa cấu hình GEMINI_API_KEY trong Streamlit Secrets!")
-            
-        # Khởi tạo Client Gemini chuẩn v1
         self.client = genai.Client(api_key=api_key)
 
     def generate_response(self, prompt, image=None, video_bytes=None, lang="Tiếng Việt", enable_search=True):
