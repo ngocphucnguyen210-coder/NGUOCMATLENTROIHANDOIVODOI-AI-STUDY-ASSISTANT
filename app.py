@@ -12,11 +12,17 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. Khởi tạo Database SQLite nâng cao (Quản lý User, Phiên Chat, Tin nhắn)
+# 2. Khởi tạo Database SQLite
 def init_db():
     conn = sqlite3.connect('phucgpt_database.db', check_same_thread=False)
     c = conn.cursor()
-    # Bảng phiên chat
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE,
+            provider TEXT
+        )
+    ''')
     c.execute('''
         CREATE TABLE IF NOT EXISTS sessions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -24,7 +30,6 @@ def init_db():
             title TEXT
         )
     ''')
-    # Bảng tin nhắn
     c.execute('''
         CREATE TABLE IF NOT EXISTS messages (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -38,7 +43,7 @@ def init_db():
 
 conn = init_db()
 
-# 3. Quản lý trạng thái Đăng nhập & Phiên chat
+# 3. Khởi tạo Trạng thái Session State
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "username" not in st.session_state:
@@ -46,32 +51,31 @@ if "username" not in st.session_state:
 if "current_session_id" not in st.session_state:
     st.session_state.current_session_id = None
 
-# --- MÀN HÌNH ĐĂNG NHẬP NÂNG CAO ---
+# --- MÀN HÌNH ĐĂNG NHẬP & LIÊN KẾT ỨNG DỤNG ---
 if not st.session_state.logged_in:
     st.markdown("""
     <style>
         .login-card {
             background: white;
-            padding: 40px;
+            padding: 35px;
             border-radius: 24px;
-            box-shadow: 0 10px 30px rgba(216, 27, 96, 0.1);
+            box-shadow: 0 10px 30px rgba(216, 27, 96, 0.12);
             text-align: center;
+            border: 1px solid #FFC0CB;
             max-width: 450px;
             margin: auto;
             margin-top: 5vh;
-            border: 1px solid #FFC0CB;
         }
         .login-title {
             color: #D81B60;
-            font-size: 32px;
+            font-size: 34px;
             font-weight: 800;
-            margin-bottom: 5px;
         }
         .login-slogan {
             color: #AD1457;
             font-size: 14px;
             font-style: italic;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
     </style>
     <div class="login-card">
@@ -80,27 +84,46 @@ if not st.session_state.logged_in:
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        login_method = st.selectbox("Chọn hình thức đăng nhập:", ["📧 Đăng nhập bằng Gmail", "📘 Đăng nhập bằng Facebook", "🍏 Đăng nhập bằng iCloud", "👤 Đăng nhập khách (Guest)"])
-        user_input = st.text_input("Nhập email hoặc tên tài khoản của bạn:")
-        
-        if st.button("🚀 Xác nhận Đăng nhập", use_container_width=True):
-            if user_input.strip() == "":
-                user_input = "NguyenGiaPhuc_User"
-            st.session_state.logged_in = True
-            st.session_state.username = user_input
-            
-            # Tạo sẵn phiên chat đầu tiên nếu chưa có
-            c = conn.cursor()
-            c.execute("INSERT INTO sessions (username, title) VALUES (?, ?)", (user_input, "Đoạn chat mới"))
-            conn.commit()
-            st.session_state.current_session_id = c.lastrowid
-            st.rerun()
+        st.markdown("### 🔗 Chọn ứng dụng liên kết")
+        auth_choice = st.selectbox(
+            "Chọn nền tảng:", 
+            ["🌐 Google / Gmail", "📘 Facebook", "🍏 Apple / iCloud"]
+        )
+
+        st.markdown("---")
+
+        if "Google" in auth_choice:
+            st.markdown('<a href="https://accounts.google.com/signin" target="_blank"><button style="width:100%; background-color:#4285F4; color:white; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer;">Mở trang đăng nhập Google ↗</button></a>', unsafe_allow_html=True)
+        elif "Facebook" in auth_choice:
+            st.markdown('<a href="https://www.facebook.com/login" target="_blank"><button style="width:100%; background-color:#1877F2; color:white; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer;">Mở trang đăng nhập Facebook ↗</button></a>', unsafe_allow_html=True)
+        elif "Apple" in auth_choice:
+            st.markdown('<a href="https://appleid.apple.com/" target="_blank"><button style="width:100%; background-color:#000000; color:white; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer;">Mở trang đăng nhập Apple ID ↗</button></a>', unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        linked_email = st.text_input("Nhập email hoặc tên tài khoản của bạn:")
+
+        if st.button("✅ Xác nhận Hoàn tất Liên kết", use_container_width=True):
+            if linked_email.strip() == "":
+                st.warning("Vui lòng nhập tài khoản!")
+            else:
+                st.session_state.logged_in = True
+                st.session_state.username = linked_email
+                
+                c = conn.cursor()
+                c.execute("SELECT id FROM sessions WHERE username = ?", (linked_email,))
+                first_sess = c.fetchone()
+                if not first_sess:
+                    c.execute("INSERT INTO sessions (username, title) VALUES (?, ?)", (linked_email, "Đoạn chat mới"))
+                    conn.commit()
+                    st.session_state.current_session_id = c.lastrowid
+                else:
+                    st.session_state.current_session_id = first_sess[0]
+                st.rerun()
     st.stop()
 
-# --- GIAO DIỆN CHÍNH SAU KHI ĐĂNG NHẬP ---
+# --- GIAO DIỆN CHÍNH ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
@@ -118,11 +141,10 @@ st.markdown("""
 
 ai_engine = AILearningEngine()
 
-# --- THANH SIDEBAR QUẢN LÝ NÂNG CAO ---
+# --- SIDEBAR ---
 with st.sidebar:
-    st.markdown(f"<h3 style='color: #D81B60; text-align: center;'>🌸 Xin chào, {st.session_state.username}</h3>", unsafe_allow_html=True)
+    st.markdown(f"<h3 style='color: #D81B60; text-align: center;'>🌸 Chào, {st.session_state.username}</h3>", unsafe_allow_html=True)
     
-    # Nút Đăng xuất
     if st.button("🚪 Đăng xuất tài khoản", use_container_width=True):
         st.session_state.logged_in = False
         st.session_state.username = ""
@@ -130,8 +152,6 @@ with st.sidebar:
         st.rerun()
 
     st.markdown("---")
-    
-    # Nút Tạo đoạn chat mới
     if st.button("✨ Tạo đoạn chat mới", use_container_width=True):
         c = conn.cursor()
         c.execute("INSERT INTO sessions (username, title) VALUES (?, ?)", (st.session_state.username, "Đoạn chat mới"))
@@ -139,8 +159,7 @@ with st.sidebar:
         st.session_state.current_session_id = c.lastrowid
         st.rerun()
 
-    # Ô Tìm kiếm cuộc chat
-    search_query = st.text_input("🔍 Tìm kiếm cuộc chat cũ...", placeholder="Nhập từ khóa...")
+    search_query = st.text_input("🔍 Tìm kiếm cuộc chat cũ...")
 
     st.markdown("---")
     st.subheader("📂 Dãy lưu trữ đoạn chat")
@@ -153,29 +172,47 @@ with st.sidebar:
     sessions = c.fetchall()
 
     for sess_id, sess_title in sessions:
-        if st.button(f"💬 {sess_title}", key=f"sess_{sess_id}", use_container_width=True):
-            st.session_state.current_session_id = sess_id
-            st.rerun()
+        cols = st.columns([3, 1])
+        with cols[0]:
+            if st.button(f"💬 {sess_title}", key=f"sess_{sess_id}", use_container_width=True):
+                st.session_state.current_session_id = sess_id
+                st.rerun()
+        with cols[1]:
+            # Nút xóa từng đoạn chat
+            if st.button("🗑️", key=f"del_{sess_id}", help="Xóa đoạn chat này"):
+                c.execute("DELETE FROM messages WHERE session_id = ?", (sess_id,))
+                c.execute("DELETE FROM sessions WHERE id = ?", (sess_id,))
+                conn.commit()
+                # Nếu đang ở đúng phiên bị xóa, chuyển về phiên khác hoặc tạo mới
+                c.execute("SELECT id FROM sessions WHERE username = ? ORDER BY id DESC LIMIT 1", (st.session_state.username,))
+                remaining = c.fetchone()
+                if remaining:
+                    st.session_state.current_session_id = remaining[0]
+                else:
+                    c.execute("INSERT INTO sessions (username, title) VALUES (?, ?)", (st.session_state.username, "Đoạn chat mới"))
+                    conn.commit()
+                    st.session_state.current_session_id = c.lastrowid
+                st.rerun()
 
     st.markdown("---")
-    st.subheader("🎙️ Tùy chỉnh Giọng nói Voice")
-    voice_gender = st.selectbox("Chọn giới tính giọng đọc:", ["Nữ", "Nam"])
-    voice_pitch = st.selectbox("Độ cao / Trầm giọng:", ["Cao", "Trung bình", "Trầm ấm"])
+    st.subheader("🎙️ Cấu hình Giọng đọc Voice")
+    voice_gender = st.selectbox("Giới tính:", ["Nữ", "Nam"])
+    voice_pitch = st.selectbox("Độ cao / Trầm:", ["Cao", "Trung bình", "Trầm ấm"])
     voice_region = st.selectbox("Vùng miền:", ["Miền Bắc 🇻🇳", "Miền Trung 🇻🇳", "Miền Nam 🇻🇳"])
     voice_config = f"{voice_gender} - {voice_pitch} - {voice_region}"
 
     st.markdown("---")
     st.subheader("🎨 Tính năng Tạo Ảnh AI")
-    image_prompt_input = st.text_input("Mô tả bức ảnh bạn muốn vẽ:")
+    image_prompt_input = st.text_input("Mô tả bức ảnh bạn muốn tạo:")
     if st.button("🎨 Tạo Ảnh Ngay", use_container_width=True):
         if image_prompt_input:
-            with st.spinner("AI đang phác thảo và vẽ bức ảnh theo yêu cầu..."):
-                img_result = ai_engine.generate_image(image_prompt_input)
-                st.success(img_result)
+            with st.spinner("AI đang phác thảo..."):
+                img_res = ai_engine.generate_image(image_prompt_input)
+                st.success(img_res)
         else:
-            st.warning("Vui lòng nhập mô tả bức ảnh bạn muốn tạo!")
+            st.warning("Vui lòng nhập mô tả ảnh!")
 
-# --- KHUNG GIAO DIỆN CHÍNH ---
+# --- KHUNG CHÍNH ---
 st.markdown("""
     <div class="header-container">
         <div class="brand-title">PHUCgpt</div>
@@ -183,7 +220,6 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# Hiển thị lịch sử tin nhắn của phiên hiện tại
 if st.session_state.current_session_id:
     c = conn.cursor()
     c.execute("SELECT role, content FROM messages WHERE session_id = ?", (st.session_state.current_session_id,))
@@ -193,28 +229,22 @@ if st.session_state.current_session_id:
         with st.chat_message(role):
             st.markdown(content)
 
-# --- KHU VỰC NHẬP DỮ LIỆU ĐA PHƯƠNG TIỆN (Ảnh, Tệp, Voice, Quay video, Văn bản) ---
-st.markdown("### 📎 Đính kèm tệp đa phương tiện & Thu âm")
-col_upload1, col_upload2 = st.columns(2)
-with col_upload1:
-    uploaded_file = st.file_uploader("Gửi ảnh hoặc Tệp tài liệu:", type=["png", "jpg", "jpeg", "pdf", "txt", "docx"])
-with col_upload2:
-    st.markdown("**🎙️ Ghi âm giọng nói (Voice):**")
+st.markdown("### 📎 Đính kèm tệp & Ghi âm")
+col1, col2 = st.columns(2)
+with col1:
+    uploaded_file = st.file_uploader("Tải ảnh hoặc tài liệu:", type=["png", "jpg", "jpeg", "pdf", "txt", "docx"])
+with col2:
+    st.markdown("**🎙️ Ghi âm giọng nói:**")
     audio_bytes = audio_recorder(text="Bấm để ghi âm", recording_color="#FF4081", neutral_color="#E0E0E0", icon_size="2x")
 
-# Xử lý khi có giọng nói ghi âm gửi lên
 if audio_bytes:
     st.audio(audio_bytes, format="audio/wav")
-    st.info("Đã ghi âm giọng nói thành công! Bạn có thể bấm gửi kèm yêu cầu.")
 
-# Khung chat input chính
-prompt = st.chat_input("Hỏi PHUCgpt bất kỳ câu hỏi, bài tập hoặc yêu cầu nào...")
+prompt = st.chat_input("Nhập câu hỏi, tâm sự hoặc yêu cầu của bạn...")
 
 if prompt or uploaded_file or audio_bytes:
-    # Xác định nội dung gửi
-    user_msg = prompt if prompt else "[Yêu cầu kèm tệp/giọng nói đa phương tiện]"
+    user_msg = prompt if prompt else "[Yêu cầu kèm tệp/ghi âm]"
     
-    # Lưu vào database tin nhắn
     c = conn.cursor()
     c.execute("INSERT INTO messages (session_id, role, content) VALUES (?, ?, ?)", (st.session_state.current_session_id, "user", user_msg))
     conn.commit()
@@ -224,22 +254,20 @@ if prompt or uploaded_file or audio_bytes:
             if "image" in uploaded_file.type:
                 st.image(uploaded_file, caption="Ảnh đính kèm", width=300)
             else:
-                st.write(f"📁 Tệp đính kèm: {uploaded_file.name}")
+                st.write(f"📁 Tệp: {uploaded_file.name}")
         if audio_bytes:
             st.audio(audio_bytes, format="audio/wav")
         st.markdown(user_msg)
 
-    # Đổi tên tiêu đề đoạn chat theo câu hỏi đầu tiên nếu đang là "Đoạn chat mới"
     c.execute("SELECT title FROM sessions WHERE id = ?", (st.session_state.current_session_id,))
-    current_title = c.fetchone()[0]
-    if current_title == "Đoạn chat mới":
+    res_title = c.fetchone()
+    if res_title and res_title[0] == "Đoạn chat mới":
         new_title = user_msg[:25] + "..." if len(user_msg) > 25 else user_msg
         c.execute("UPDATE sessions SET title = ? WHERE id = ?", (new_title, st.session_state.current_session_id))
         conn.commit()
 
-    # Gọi AI trả lời
     with st.chat_message("bot"):
-        with st.spinner("PHUCgpt đang phân tích và xử lý đa phương tiện..."):
+        with st.spinner("PHUCgpt đang lắng nghe và suy ngẫm..."):
             response = ai_engine.generate_response(
                 prompt=user_msg, 
                 file_attachment=uploaded_file, 
@@ -247,7 +275,5 @@ if prompt or uploaded_file or audio_bytes:
                 voice_config=voice_config
             )
             st.markdown(response)
-            
-            # Lưu phản hồi vào DB
             c.execute("INSERT INTO messages (session_id, role, content) VALUES (?, ?, ?)", (st.session_state.current_session_id, "bot", response))
             conn.commit()
