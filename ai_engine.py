@@ -4,10 +4,12 @@ import streamlit as st
 
 class AILearningEngine:
     def __init__(self):
+        # 🔑 Groq API Key của bạn
         self.api_key = "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"
         self.api_url = "https://api.groq.com/openai/v1/chat/completions"
 
     def search_web_fallback(self, query):
+        """Hàm tra cứu dữ liệu thực tế từ web"""
         try:
             headers = {'User-Agent': 'Mozilla/5.0'}
             url = f"https://html.duckduckgo.com/html/?q={query}"
@@ -36,15 +38,15 @@ class AILearningEngine:
             "Content-Type": "application/json"
         }
 
-        # Sử dụng model gemma2-9b-it chuẩn xác và luôn khả dụng trên Groq miễn phí
+        # Sử dụng model openai/gpt-oss-20b (Model chính thức thay thế Llama 3.1 8B từ Groq năm 2026)
         payload = {
-            "model": "gemma2-9b-it",
+            "model": "openai/gpt-oss-20b",
             "messages": [
                 {"role": "system", "content": system_instruction},
                 {"role": "user", "content": prompt if prompt else "Xin chào!"}
             ],
             "temperature": 0.5,
-            "max_tokens": 600
+            "max_tokens": 500
         }
 
         try:
