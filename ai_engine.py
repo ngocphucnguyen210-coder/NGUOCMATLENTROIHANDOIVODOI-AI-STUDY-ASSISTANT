@@ -5,7 +5,7 @@ from google.genai import types
 
 class AILearningEngine:
     def __init__(self):
-        # Lấy API Key từ Streamlit Secrets trước, nếu không có thì lấy từ biến môi trường (.env)
+        # Lấy API Key an toàn từ Streamlit Secrets hoặc biến môi trường
         api_key = None
         try:
             if "GEMINI_API_KEY" in st.secrets:
@@ -17,8 +17,9 @@ class AILearningEngine:
             api_key = os.getenv("GEMINI_API_KEY")
             
         if not api_key:
-            raise ValueError("Chưa cấu hình GEMINI_API_KEY trong Streamlit Secrets hoặc file .env")
+            raise ValueError("Chưa cấu hình GEMINI_API_KEY trong Streamlit Secrets!")
             
+        # Khởi tạo Client Gemini chuẩn v1
         self.client = genai.Client(api_key=api_key)
 
     def generate_response(self, prompt, image=None, video_bytes=None, lang="Tiếng Việt", enable_search=True):
@@ -60,4 +61,4 @@ class AILearningEngine:
             )
             return response.text
         except Exception as e:
-            return f"❌ Lỗi khi kết nối với AI Engine: {str(e)}"
+            return f"❌ Lỗi xử lý từ AI: {str(e)}"
