@@ -44,7 +44,7 @@ class AILearningEngine:
             ]
             messages.append({"role": "user", "content": user_content})
         else:
-            model_name = "llama-3.3-70b-versatile"
+            model_name = "llama-3.1-70b-versatile"
             messages.append({"role": "user", "content": prompt if prompt else "Xin chào!"})
 
         payload = {
