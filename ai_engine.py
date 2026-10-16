@@ -5,36 +5,26 @@ from google.genai import types
 
 class AILearningEngine:
     def __init__(self):
-        api_key = "AQ.Ab8RN6K3RgiUMj9d4NJ1zNypKiYdh7T7uG7Zly205eT9HGL7IQ"
-        # 1. Ưu tiên đọc từ Streamlit Secrets trên Cloud
-        try:
-            if "GEMINI_API_KEY" in st.secrets:
-                api_key = st.secrets["GEMINI_API_KEY"]
-        except Exception:
-            pass
-            
-        # 2. Nếu không có, đọc từ biến môi trường (.env khi chạy local)
-        if not api_key:
-            api_key = os.getenv("GEMINI_API_KEY")
+        # Dán đoạn mã AQ... của bạn vào đây, hệ thống sẽ tự nhận diện
+        api_key = "AQ.Ab8RN6Ip6cWwOx0rNEbbw--1xSrniZAlSizH6JE1udWwLzHMJg"
             
         if not api_key:
-            raise ValueError("Chưa cấu hình GEMINI_API_KEY trong Streamlit Secrets hoặc file .env")
+            raise ValueError("Vui lòng điền mã xác thực!")
             
+        # Khởi tạo client tương thích
         self.client = genai.Client(api_key=api_key)
 
     def generate_response(self, prompt, image=None, video_bytes=None, lang="Tiếng Việt", enable_search=True):
         system_instruction = f"""
-        Bạn là Trợ lý Học tập AI Thông minh & Toàn năng bậc nhất. 
+        Bạn là PHUCgpt - Trợ Lý AI Học Tập Thông Minh & Toàn Năng. 
         Ngôn ngữ phản hồi chính: {lang}.
         
         Nhiệm vụ chính:
-        1. GIẢI BÀI TẬP (Toán, Lý, Hóa, Văn, Anh, Sinh, Sử, Địa...):
-           - Tóm tắt đề bài.
-           - Phương pháp & Công thức áp dụng.
-           - Lời giải từng bước chi tiết, dễ hiểu, chuẩn xác 100%.
-           - Đáp số / Kết luận.
-        2. TRI THỨC CUỘC SỐNG & TƯ DUY TỰ DO: Trả lời khoa học, mạch lạc, dễ tiếp thu.
-        3. NHẬN DIỆN HÌNH ẢNH/VIDEO: Nhận diện hình ảnh bài tập, giải bài hoặc phân tích video.
+        1. GIẢI BÀI TẬP & PHÂN TÍCH TÁC PHẨM:
+           - Tóm tắt đề bài / Tác phẩm (Ví dụ: Chí Phèo, Vợ nhặt...).
+           - Phương pháp, phân tích chi tiết, sắc sảo, chuẩn văn học/khoa học.
+           - Lời giải từng bước rõ ràng, dễ hiểu.
+        2. TRI THỨC CUỘC SỐNG: Trả lời khoa học, mạch lạc, dễ tiếp thu.
         """
 
         contents = []
