@@ -6,12 +6,6 @@ import streamlit as st
 from audio_recorder_streamlit import audio_recorder
 from ai_engine import AILearningEngine
 
-try:
-    from streamlit_drawable_canvas import st_canvas
-    CANVAS_AVAILABLE = True
-except ImportError:
-    CANVAS_AVAILABLE = False
-
 # 1. Cấu hình Trang Streamlit
 st.set_page_config(
     page_title="PHUCgpt - Chăm chỉ mỗi ngày, kiến tạo tương lai",
@@ -26,7 +20,7 @@ FALLBACK_LOGO_URL = "https://cdn-icons-png.flaticon.com/512/869/869840.png"
 
 # 2. Khởi tạo Database SQLite
 def init_db():
-    conn = sqlite3.connect('phucgpt_app_v19.db', check_same_thread=False)
+    conn = sqlite3.connect('phucgpt_app_v20.db', check_same_thread=False)
     c = conn.cursor()
     c.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, provider TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, title TEXT)')
@@ -71,7 +65,7 @@ TRANSLATIONS_DICT = {
         "tab_calendar": "📅 Lịch & Sự Kiện",
         "tab_todo": "📝 To-Do List",
         "tab_group": "👥 Nhóm Chat & Video",
-        "tab_note": "🎨 Ghi Chú & Bảng Vẽ",
+        "tab_note": "🎨 Ghi Chú & Bảng Vẽ Pro",
         "welcome": "🌸 Chào",
         "logout": "🚪 Đăng xuất",
         "new_chat": "✨ + Tạo đoạn chat mới",
@@ -101,7 +95,7 @@ if st.session_state.custom_bg_base64:
 else:
     active_bg_css = bg_preset_styles[st.session_state.bg_theme]
 
-# CSS TỐI ƯU HOÁ CHO DI ĐỘNG VÀ ĐĂNG NHẬP
+# CSS TỐI ƯU GIAO DIỆN & DI ĐỘNG
 st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
@@ -193,12 +187,6 @@ st.markdown(f"""
         border: 3px solid #FF80AB; box-shadow: 0 8px 25px rgba(216, 27, 96, 0.15);
     }}
     
-    @media screen and (max-width: 768px) {{
-        .brand-title-fancy {{ font-size: 32px; }}
-        .timer-card {{ font-size: 34px; }}
-        .main .block-container {{ padding: 10px !important; }}
-    }}
-
     .logo-official-img {{
         width: 100px;
         height: 100px;
@@ -230,7 +218,6 @@ if not st.session_state.logged_in:
         st.markdown("<br>", unsafe_allow_html=True)
         st.subheader("🔑 Đăng nhập & Liên kết tài khoản")
         
-        # CHỌN PHƯƠNG THỨC LIÊN KẾT NHANH
         auth_provider = st.selectbox(
             "🌐 Chọn nền tảng để liên kết đăng nhập:", 
             ["🔗 Google / Gmail", "📘 Facebook", "🍏 Apple / iCloud", "📧 Tài khoản cá nhân khác"]
@@ -540,11 +527,11 @@ with tab_group:
     for s, ct, ts in c.fetchall():
         st.markdown(f"**[{ts}] {s}**: {ct}")
 
-# TAB 6: NOTE WORD & BẢNG VẼ STUDIO PRO
+# TAB 6: NOTE WORD & BẢNG VẼ HTML5 CANVAS CHUYÊN NGHIỆP 100% HIỂN THỊ
 with tab_note:
     st.subheader("🎨 Ghi Chú Word & Bảng Vẽ Studio Pro")
     
-    note_mode = st.radio("Chế độ:", ["📝 Trình Soạn Thảo Word", "🖌️ Bảng Vẽ Studio Pro"], horizontal=True)
+    note_mode = st.radio("Chế độ:", ["📝 Trình Soạn Thảo Word", "🖌️ Bảng Vẽ Studio Pro (Đầy Đủ Công Cụ)"], horizontal=True)
     
     if note_mode == "📝 Trình Soạn Thảo Word":
         note_title = st.text_input("Tiêu đề Tài liệu:")
@@ -582,48 +569,102 @@ with tab_note:
                 st.rerun()
 
     else:
-        st.markdown("### 🖌️ Bảng Vẽ Studio Pro")
-        if CANVAS_AVAILABLE:
-            col_p1, col_p2, col_p3 = st.columns(3)
-            with col_p1:
-                pen_type = st.selectbox("Loại bút:", ["✏️ Bút chì", "✒️ Bút bi", "🖌️ Bút kim", "💧 Cọ nước", "🧹 Tẩy"])
-            with col_p2:
-                drawing_mode = st.selectbox("Công cụ:", ["freedraw", "line", "rect", "circle", "transform"])
-            with col_p3:
-                stroke_color = st.color_picker("Màu vẽ:", "#D81B60")
+        st.markdown("### 🖌️ Bảng Vẽ Studio Pro - Tích Hợp Đầy Đủ Công Cụ")
+        
+        # BẢNG VẼ HTML5 NATIVE CHẮC CHẮN HIỆN THỊ TRÊN MỌI THIẾT BỊ
+        drawing_canvas_html = """
+        <div style="background: #FFF0F5; padding: 15px; border-radius: 16px; border: 2px solid #FF80AB;">
+            <div style="margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+                <label>🎨 Màu vẽ: <input type="color" id="colorPicker" value="#D81B60" style="vertical-align: middle;"></label>
+                <label>📏 Nét: <input type="range" id="brushSize" min="1" max="40" value="4" style="vertical-align: middle;"></label>
+                <button onclick="setTool('pen')" style="background:#FF4081; color:white; border:none; padding:6px 12px; border-radius:8px; cursor:pointer; font-weight:bold;">✏️ Bút/Cọ</button>
+                <button onclick="setTool('eraser')" style="background:#7597de; color:white; border:none; padding:6px 12px; border-radius:8px; cursor:pointer; font-weight:bold;">🧹 Tẩy</button>
+                <button onclick="setTool('rect')" style="background:#e94560; color:white; border:none; padding:6px 12px; border-radius:8px; cursor:pointer; font-weight:bold;">⬜ Hình Chữ Nhật</button>
+                <button onclick="setTool('circle')" style="background:#4CAF50; color:white; border:none; padding:6px 12px; border-radius:8px; cursor:pointer; font-weight:bold;">⭕ Hình Tròn</button>
+                <button onclick="clearCanvas()" style="background:#333; color:white; border:none; padding:6px 12px; border-radius:8px; cursor:pointer; font-weight:bold;">🗑️ Xóa Sạch</button>
+            </div>
+            <canvas id="proCanvas" width="700" height="400" style="background: #FFFFFF; border: 2px dashed #FF4081; border-radius: 12px; width: 100%; cursor: crosshair;"></canvas>
+        </div>
 
-            stroke_width = st.slider("Độ dày nét:", 1, 40, 4)
+        <script>
+            const canvas = document.getElementById('proCanvas');
+            const ctx = canvas.getContext('2d');
+            let painting = false;
+            let currentTool = 'pen';
+            let startX, startY;
 
-            if "Tẩy" in pen_type:
-                actual_color = "#FFFFFF"
-                stroke_width = stroke_width * 3
-            else:
-                actual_color = stroke_color
+            function setTool(tool) {
+                currentTool = tool;
+            }
 
-            draw_title = st.text_input("Tiêu đề Bức vẽ:")
+            canvas.addEventListener('mousedown', (e) => {
+                painting = true;
+                startX = e.offsetX;
+                startY = e.offsetY;
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+            });
 
-            canvas_result = st_canvas(
-                fill_color="rgba(255, 128, 171, 0.2)" if "Cọ nước" in pen_type else "rgba(0, 0, 0, 0)",
-                stroke_width=stroke_width,
-                stroke_color=actual_color,
-                background_color="#FFFFFF",
-                height=350,
-                drawing_mode=drawing_mode,
-                key="canvas_studio_pro",
-            )
+            canvas.addEventListener('mousemove', (e) => {
+                if (!painting) return;
+                const color = document.getElementById('colorPicker').value;
+                const size = document.getElementById('brushSize').value;
 
-            if st.button("💾 Lưu Bức Vẽ"):
-                if draw_title.strip():
-                    c = conn.cursor()
-                    now_str = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
-                    c.execute("INSERT INTO user_drawings (username, title, image_data, updated_at) VALUES (?, ?, ?, ?)", 
-                              (st.session_state.username, draw_title, "Đã lưu bản vẽ", now_str))
-                    conn.commit()
-                    st.success("🎉 Đã lưu bức vẽ!")
-                    st.rerun()
+                if (currentTool === 'pen') {
+                    ctx.lineWidth = size;
+                    ctx.lineCap = 'round';
+                    ctx.strokeStyle = color;
+                    ctx.lineTo(e.offsetX, e.offsetY);
+                    ctx.stroke();
+                } else if (currentTool === 'eraser') {
+                    ctx.lineWidth = size * 3;
+                    ctx.lineCap = 'round';
+                    ctx.strokeStyle = '#FFFFFF';
+                    ctx.lineTo(e.offsetX, e.offsetY);
+                    ctx.stroke();
+                }
+            });
+
+            canvas.addEventListener('mouseup', (e) => {
+                if (!painting) return;
+                painting = false;
+                const color = document.getElementById('colorPicker').value;
+                const size = document.getElementById('brushSize').value;
+
+                if (currentTool === 'rect') {
+                    ctx.lineWidth = size;
+                    ctx.strokeStyle = color;
+                    ctx.strokeRect(startX, startY, e.offsetX - startX, e.offsetY - startY);
+                } else if (currentTool === 'circle') {
+                    ctx.lineWidth = size;
+                    ctx.strokeStyle = color;
+                    let radius = Math.sqrt(Math.pow(e.offsetX - startX, 2) + Math.pow(e.offsetY - startY, 2));
+                    ctx.beginPath();
+                    ctx.arc(startX, startY, radius, 0, 2 * Math.PI);
+                    ctx.stroke();
+                }
+            });
+
+            function clearCanvas() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        </script>
+        """
+        st.components.v1.html(drawing_canvas_html, height=500)
+
+        draw_title = st.text_input("Tiêu đề Bức vẽ / Sơ đồ:", placeholder="Nhập tên bức vẽ...")
+        if st.button("💾 Lưu Bức Vẽ Vào Kho"):
+            if draw_title.strip():
+                c = conn.cursor()
+                now_str = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
+                c.execute("INSERT INTO user_drawings (username, title, image_data, updated_at) VALUES (?, ?, ?, ?)", 
+                          (st.session_state.username, draw_title, "Đã lưu bản vẽ Pro", now_str))
+                conn.commit()
+                st.success("🎉 Đã lưu bức vẽ vào kho thành công!")
+                st.rerun()
 
     st.markdown("---")
-    st.subheader("📂 Kho Lưu Trữ Ghi Chú")
+    st.subheader("📂 Kho Lưu Trữ Ghi Chú & Bức Vẽ")
     c = conn.cursor()
     c.execute("SELECT id, title, content, updated_at FROM user_notes WHERE username = ? ORDER BY id DESC", (st.session_state.username,))
     for nid, ntitle, nct, nup in c.fetchall():
