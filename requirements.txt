@@ -3,3 +3,4 @@ requests
 Pillow
 audio-recorder-streamlit
 duckduckgo-search
+streamlit-drawable-canvas
