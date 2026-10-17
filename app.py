@@ -20,12 +20,12 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# LOGO CHÍNH THỨC CỦA PHÚC (CHÚ GẤU LEO NÚI TRI THỨC)
+# LOGO CHÍNH THỨC CỦA PHÚC
 OFFICIAL_LOGO_URL = "https://raw.githubusercontent.com/nguocmatlentroihandoivodoi-ai-study-assistant/main/logo.png"
 
 # 2. Khởi tạo Database SQLite
 def init_db():
-    conn = sqlite3.connect('phucgpt_app_v7.db', check_same_thread=False)
+    conn = sqlite3.connect('phucgpt_app_v8.db', check_same_thread=False)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, provider TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, title TEXT)''')
@@ -136,89 +136,4 @@ st.markdown(f"""
 
     [data-testid="stSidebar"] {{
         background-color: rgba(255, 255, 255, 0.96) !important;
-        backdrop-filter: blur(12px);
-        border-right: 2px solid #FF80AB !important;
-    }}
-    
-    [data-testid="stSidebar"] *, [data-testid="stSidebar"] label, [data-testid="stSidebar"] p, [data-testid="stSidebar"] span {{
-        color: #1A202C !important;
-        font-weight: 600 !important;
-    }}
-
-    .login-card {{
-        background: rgba(255, 255, 255, 0.98);
-        padding: 30px;
-        border-radius: 24px;
-        box-shadow: 0 10px 30px rgba(216, 27, 96, 0.2);
-        border: 2px solid #FF80AB;
-        text-align: center;
-        max-width: 480px;
-        margin: auto;
-    }}
-
-    .brand-title-fancy {{
-        font-family: 'Fredoka', sans-serif;
-        font-size: 46px;
-        font-weight: 700;
-        text-align: center;
-        color: #D81B60;
-        margin-top: 5px;
-        margin-bottom: 0px;
-    }}
-
-    .brand-slogan-new {{
-        color: #C2185B !important;
-        font-size: 15px;
-        font-weight: 700;
-        font-style: italic;
-        text-align: center;
-        margin-bottom: 20px;
-    }}
-    
-    [data-testid="stChatMessageUser"] {{ background: linear-gradient(135deg, #FF80AB 0%, #FF4081 100%) !important; color: white !important; border-radius: 20px 20px 4px 20px !important; }}
-    [data-testid="stChatMessageBot"] {{ background-color: rgba(255, 255, 255, 0.96) !important; color: #1A202C !important; border: 1.5px solid #FF80AB !important; border-radius: 20px 20px 20px 4px !important; box-shadow: 0 4px 15px rgba(216, 27, 96, 0.08); }}
-    
-    .stButton>button {{ background: linear-gradient(135deg, #FF4081 0%, #D81B60 100%) !important; color: white !important; border-radius: 12px !important; border: none !important; font-weight: 700 !important; }}
-
-    .timer-card {{
-        font-size: 52px; font-weight: 800; color: #D81B60; text-align: center; 
-        background: #FFFFFF; padding: 20px; border-radius: 24px; 
-        border: 3px solid #FF80AB; box-shadow: 0 8px 25px rgba(216, 27, 96, 0.15);
-    }}
-    
-    .logo-official-img {{
-        max-width: 130px;
-        border-radius: 20px;
-        box-shadow: 0 8px 20px rgba(216, 27, 96, 0.2);
-    }}
-</style>
-""", unsafe_allow_html=True)
-
-# --- MÀN HÌNH ĐĂNG NHẬP ---
-if not st.session_state.logged_in:
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.markdown(f"""
-        <div class="login-card">
-            <div style="text-align:center;">
-                <img src="{OFFICIAL_LOGO_URL}" class="logo-official-img" onerror="this.src='https://cdn-icons-png.flaticon.com/512/869/869840.png'">
-            </div>
-            <div class="brand-title-fancy">PHUCgpt</div>
-            <div class="brand-slogan-new">"{t_dict['slogan']}"</div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.subheader("🔑 Đăng nhập / Liên kết ứng dụng")
-        auth_choice = st.selectbox("Chọn nền tảng liên kết:", ["🌐 Google / Gmail", "📘 Facebook", "🍏 Apple / iCloud"])
-        linked_email = st.text_input("Nhập Tên tài khoản / Email của bạn:")
-
-        if st.button("🚀 Bắt đầu sử dụng ngay", use_container_width=True):
-            if linked_email.strip() == "":
-                st.warning("Vui lòng nhập tên tài khoản!")
-            else:
-                st.session_state.logged_in = True
-                st.session_state.username = linked_email
-                
-                c = conn.cursor()
-                c.execute("SELECT id FROM
+        backdrop-filter: blur
