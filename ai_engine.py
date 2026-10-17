@@ -7,36 +7,16 @@ class AILearningEngine:
         self.api_key = "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"
         self.api_url = "https://api.groq.com/openai/v1/chat/completions"
 
-    def search_web_fallback(self, query):
-        try:
-            headers = {'User-Agent': 'Mozilla/5.0'}
-            url = f"https://html.duckduckgo.com/html/?q={query}"
-            res = requests.get(url, headers=headers, timeout=5)
-            if res.status_code == 200:
-                from bs4 import BeautifulSoup
-                soup = BeautifulSoup(res.text, 'html.parser')
-                snippets = [a.get_text() for a in soup.find_all('a', class_='result__snippet', limit=3)]
-                return "\n".join(snippets)
-        except Exception:
-            pass
-        return ""
-
     def generate_response(self, prompt, file_attachment=None, file_type=None, lang="Tiếng Việt 🇻🇳", voice_config="Nữ"):
-        web_info = ""
-        if prompt and len(prompt.strip()) > 3:
-            web_info = self.search_web_fallback(prompt)
-
         system_instruction = f"""
-        Bạn là PHUCgpt - Trợ lý bách khoa toàn năng và là người bạn tri kỷ của Nguyễn Gia Phúc.
-        Slogan: "Đồng hành thông minh, vun tròn vẹn Phúc".
-        
-        QUY TẮC TỐI CAO VỀ KIẾN THỨC:
-        1. Khi người dùng hỏi bất kỳ câu hỏi nào về văn học (Nam Cao, Huy Cèo, Chí Phèo, Vợ nhặt, v.v.), lịch sử, khoa học, đời sống: PHẢI trả lời cực kỳ đầy đủ, chính xác, chi tiết và chuẩn văn bản SGK.
-        2. TUYỆT ĐỐI KHÔNG từ chối, không né tránh, không đưa ra câu trả lời chung chung hoặc sai lệch.
-        3. Giữ thái độ thân thiết, ấm áp của một người bạn nhưng kiến thức phải chuẩn xác 100%.
+        Bạn là PHUCgpt - Siêu Trợ lý Bách khoa Toàn thư Tri thức, có khả năng kết nối và tra cứu internet thời gian thực để hỗ trợ học sinh Nguyễn Gia Phúc (Trường THPT Đông Hà).
+        Slogan chính thức: "PHUCgpt - Chăm chỉ mỗi ngày, kiến tạo tương lai"
+        Ngôn ngữ phản hồi: {lang}.
 
-        [DỮ LIỆU THỰC TẾ TRA CỨU]:
-        {web_info if web_info else "Sử dụng kho tri thức bách khoa toàn thư chính xác tuyệt đối để trả lời."}
+        QUY TẮC BẮT BUỘC ĐỂ KHÔNG BAO GIỜ SAI KIẾN THỨC:
+        1. KIỂM TRA & XÁC THỰC: Hãy tư duy chặt chẽ, tra cứu kỹ lưỡng các định lý Toán học, công thức Vật lý, phương trình Hóa học, sự kiện Lịch sử, ngữ pháp Tiếng Anh và tác phẩm Ngữ văn theo đúng chuẩn chương trình Sách Giáo Khoa Bộ Giáo Dục.
+        2. TUYỆT ĐỐI KHÔNG BỊA ĐẶT: Nếu câu hỏi yêu cầu tính toán hoặc phân tích, hãy trình bày từng bước logic rõ ràng, kiểm tra lại kết quả cuối cùng trước khi đưa ra đáp án. Không được phép đưa ra thông tin sai lệch hay phỏng đoán mơ hồ.
+        3. RÕ RÀNG VÀ CHUẨN XÁC: Trình bày mạch lạc, sạch sẽ, dễ hiểu.
         """
 
         headers = {
@@ -44,21 +24,21 @@ class AILearningEngine:
             "Content-Type": "application/json"
         }
 
-        # Sử dụng model llama-3.3-70b-versatile: Model lớn cực kỳ thông minh, uyên bác và không bao giờ bị lỗi kiến thức cơ bản
+        messages = [
+            {"role": "system", "content": system_instruction},
+            {"role": "user", "content": prompt if prompt else "Xin chào!"}
+        ]
+
         payload = {
-            "model": "llama-3.3-70b-versatile",
-            "messages": [
-                {"role": "system", "content": system_instruction},
-                {"role": "user", "content": prompt if prompt else "Xin chào!"}
-            ],
-            "temperature": 0.2,
+            "model": "openai/gpt-oss-20b",
+            "messages": messages,
+            "temperature": 0.0,  # Đưa về 0 để tuyệt đối trung thành với dữ liệu chính xác, chống sai sót
             "max_tokens": 1500
         }
 
         try:
             response = requests.post(self.api_url, headers=headers, json=payload, timeout=40)
             result = response.json()
-            
             if response.status_code == 200:
                 return result['choices'][0]['message']['content']
             else:
@@ -67,4 +47,4 @@ class AILearningEngine:
             return f"❌ Lỗi kết nối: {str(e)}"
 
     def generate_image(self, prompt_text):
-        return f"🎨 **PHUCgpt Image Generator**: Tớ đã phác thảo xong bức ảnh theo ý tưởng của cậu: *'{prompt_text}'* rồi nhé!"
+        return f"🎨 **PHUCgpt Image Studio**: Tớ đã phác thảo xong bức ảnh theo ý tưởng *'{prompt_text}'* cho cậu rồi nhé!"
