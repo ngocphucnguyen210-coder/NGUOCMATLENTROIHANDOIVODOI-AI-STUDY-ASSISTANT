@@ -25,7 +25,7 @@ OFFICIAL_LOGO_URL = "https://raw.githubusercontent.com/nguocmatlentroihandoivodo
 
 # 2. Khởi tạo Database SQLite
 def init_db():
-    conn = sqlite3.connect('phucgpt_app_v14.db', check_same_thread=False)
+    conn = sqlite3.connect('phucgpt_app_v15.db', check_same_thread=False)
     c = conn.cursor()
     c.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, provider TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, title TEXT)')
@@ -121,7 +121,7 @@ if st.session_state.custom_bg_base64:
 else:
     active_bg_css = bg_preset_styles[st.session_state.bg_theme]
 
-# CSS GIAO DIỆN SẠCH SẼ, KHÔNG LỖI LAYER, KHÔNG CÒN KÝ TỰ RỜM RÀ
+# CSS GIAO DIỆN TỐI ƯU HOÁ HIỂN THỊ LOGO VÀ KHÔNG LỖI LAYER
 st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
@@ -133,7 +133,7 @@ st.markdown(f"""
     }}
 
     .main .block-container {{
-        background: rgba(255, 255, 255, 0.92) !important;
+        background: rgba(255, 255, 255, 0.93) !important;
         backdrop-filter: blur(10px) !important;
         border-radius: 20px !important;
         padding: 25px !important;
@@ -285,13 +285,15 @@ with st.sidebar:
         st.session_state.bg_theme = selected_bg
         st.rerun()
 
-    bg_file = st.file_uploader("🖼️ Tải ảnh nền từ máy:", type=["png", "jpg", "jpeg"])
+    # TẢI HÌNH NỀN TRỰC TIẾP TỪ MÁY CÁ NHÂN
+    bg_file = st.file_uploader("🖼️ Tải ảnh nền từ máy của bạn:", type=["png", "jpg", "jpeg"])
     if bg_file:
         b64 = base64.b64encode(bg_file.getvalue()).decode('utf-8')
         st.session_state.custom_bg_base64 = b64
+        st.success("Đã tải ảnh nền mới thành công!")
         st.rerun()
 
-    if st.session_state.custom_bg_base64 and st.button("🔄 Đặt lại hình nền"):
+    if st.session_state.custom_bg_base64 and st.button("🔄 Đặt lại hình nền mặc định"):
         st.session_state.custom_bg_base64 = None
         st.rerun()
 
@@ -385,7 +387,7 @@ with tab_chat:
             conn.commit()
 
         with st.chat_message("bot"):
-            with st.spinner("PHUCgpt đang suy ngẫm giải đáp..."):
+            with st.spinner("PHUCgpt đang tra cứu internet & suy ngẫm giải đáp..."):
                 response = ai_engine.generate_response(
                     prompt=user_msg, 
                     file_attachment=uploaded_file, 
@@ -537,11 +539,11 @@ with tab_group:
     for s, ct, ts in c.fetchall():
         st.markdown(f"**[{ts}] {s}**: {ct}")
 
-# TAB 6: NOTE WORD & CANVAS BẢNG VẼ CHUYÊN NGHIỆP
+# TAB 6: NOTE WORD & CANVAS BẢNG VẼ NÂNG CAO (CÓ TẨY, HÌNH KHỐI, MÀU SẮC)
 with tab_note:
     st.subheader("🎨 Trình Soạn Thảo Tài Liệu Word & Bảng Vẽ Đa Năng")
     
-    note_mode = st.radio("Chọn chế độ:", ["📝 Trình Soạn Thảo Word Thật 100%", "🖌️ Bảng Vẽ / Studio Nghệ Thuật"], horizontal=True)
+    note_mode = st.radio("Chọn chế độ:", ["📝 Trình Soạn Thảo Word Thật 100%", "🖌️ Bảng Vẽ / Studio Nâng Cao"], horizontal=True)
     
     if note_mode == "📝 Trình Soạn Thảo Word Thật 100%":
         st.markdown("### 🔤 Công Cụ Soạn Thảo & Định Dạng Văn Bản")
@@ -582,26 +584,31 @@ with tab_note:
                 st.rerun()
 
     else:
-        st.markdown("### 🖌️ Bảng Vẽ & Studio Sáng Tạo")
+        st.markdown("### 🖌️ Bảng Vẽ & Studio Nâng Cao (Cọ, Tẩy, Hình Khối)")
         if CANVAS_AVAILABLE:
-            col_c1, col_c2, col_c3 = st.columns(3)
+            col_c1, col_c2, col_c3, col_c4 = st.columns(4)
             with col_c1:
-                drawing_mode = st.selectbox("Chọn công cụ cọ vẽ:", ["freedraw", "line", "rect", "circle"])
+                drawing_mode = st.selectbox("Công cụ vẽ:", ["freedraw", "line", "rect", "circle", "transform"])
             with col_c2:
-                stroke_width = st.slider("Độ dày nét cọ:", 1, 30, 4)
+                stroke_width = st.slider("Độ dày nét:", 1, 40, 5)
             with col_c3:
-                stroke_color = st.color_picker("🎨 Bảng phối màu:", "#D81B60")
+                stroke_color = st.color_picker("🎨 Màu nét vẽ:", "#D81B60")
+            with col_c4:
+                # Tính năng Tẩy nhanh bằng cách chuyển màu nét vẽ trùng với màu nền trắng
+                eraser_mode = st.checkbox("🧹 Dùng Cục Tẩy (Eraser)")
+
+            actual_color = "#FFFFFF" if eraser_mode else stroke_color
 
             draw_title = st.text_input("Tiêu đề Bức vẽ / Sơ đồ:", placeholder="Nhập tên bức vẽ...")
 
             canvas_result = st_canvas(
                 fill_color="rgba(255, 128, 171, 0.2)",
-                stroke_width=stroke_width,
-                stroke_color=stroke_color,
+                stroke_width=stroke_width if not eraser_mode else stroke_width * 3,
+                stroke_color=actual_color,
                 background_color="#FFFFFF",
-                height=350,
+                height=400,
                 drawing_mode=drawing_mode,
-                key="canvas_studio",
+                key="canvas_advanced_studio",
             )
 
             if st.button("💾 Lưu Bức Vẽ Vào Kho"):
@@ -609,7 +616,7 @@ with tab_note:
                     c = conn.cursor()
                     now_str = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
                     c.execute("INSERT INTO user_drawings (username, title, image_data, updated_at) VALUES (?, ?, ?, ?)", 
-                              (st.session_state.username, draw_title, "Đã lưu bản vẽ", now_str))
+                              (st.session_state.username, draw_title, "Đã lưu bản vẽ nâng cao", now_str))
                     conn.commit()
                     st.success("🎉 Đã lưu bức vẽ vào kho thành công!")
                     st.rerun()
