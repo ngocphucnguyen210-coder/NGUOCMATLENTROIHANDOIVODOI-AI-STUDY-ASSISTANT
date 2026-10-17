@@ -25,7 +25,7 @@ OFFICIAL_LOGO_URL = "https://raw.githubusercontent.com/nguocmatlentroihandoivodo
 
 # 2. Khởi tạo Database SQLite
 def init_db():
-    conn = sqlite3.connect('phucgpt_app_v13.db', check_same_thread=False)
+    conn = sqlite3.connect('phucgpt_app_v14.db', check_same_thread=False)
     c = conn.cursor()
     c.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, provider TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, title TEXT)')
@@ -54,8 +54,6 @@ if "custom_bg_base64" not in st.session_state:
     st.session_state.custom_bg_base64 = None
 if "language" not in st.session_state:
     st.session_state.language = "Tiếng Việt 🇻🇳"
-if "input_buffer" not in st.session_state:
-    st.session_state.input_buffer = ""
 
 if "timer_running" not in st.session_state:
     st.session_state.timer_running = False
@@ -123,7 +121,7 @@ if st.session_state.custom_bg_base64:
 else:
     active_bg_css = bg_preset_styles[st.session_state.bg_theme]
 
-# FIX TRIỆT ĐỂ LỖI LAYER HÌNH NỀN VÀ HIỂN THỊ LOGO
+# CSS GIAO DIỆN SẠCH SẼ, KHÔNG LỖI LAYER, KHÔNG CÒN KÝ TỰ RỜM RÀ
 st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
@@ -135,7 +133,7 @@ st.markdown(f"""
     }}
 
     .main .block-container {{
-        background: rgba(255, 255, 255, 0.90) !important;
+        background: rgba(255, 255, 255, 0.92) !important;
         backdrop-filter: blur(10px) !important;
         border-radius: 20px !important;
         padding: 25px !important;
@@ -365,41 +363,10 @@ with tab_chat:
     if audio_bytes:
         st.audio(audio_bytes, format="audio/wav")
 
-    # THANH KÝ HIỆU NHANH
-    st.markdown("##### 🧮 Ký hiệu toán - lý - hóa nhanh:")
-    sym_dict = {
-        "Căn bậc 2": "$\\sqrt{x}$",
-        "Phân số": "$\\frac{a}{b}$",
-        "Số mũ": "$x^2$",
-        "Tích phân": "$\\int$",
-        "Pi": "$\\pi$",
-        "Độ": "$\\theta^\\circ$",
-        "Vô cùng": "$\\infty$",
-        "Cộng trừ": "$\\pm$",
-        "H2SO4": "$H_2SO_4$",
-        "Mũi tên": "$\\rightarrow$"
-    }
-    
-    cols_sym = st.columns(5)
-    keys_list = list(sym_dict.keys())
-    for idx, key_name in enumerate(keys_list):
-        with cols_sym[idx % 5]:
-            if st.button(f"{key_name} ({sym_dict[key_name]})", key=f"sym_btn_{idx}"):
-                st.session_state.input_buffer += f" {sym_dict[key_name]} "
-
-    if st.session_state.input_buffer:
-        st.info(f"📝 Ký hiệu đang lưu tạm: **{st.session_state.input_buffer}**")
-        if st.button("🗑️ Xóa ký hiệu"):
-            st.session_state.input_buffer = ""
-            st.rerun()
-
-    prompt = st.chat_input("Hỏi PHUCgpt bất kỳ câu hỏi, bài tập hoặc nhập thêm số vào công thức...")
+    prompt = st.chat_input("Hỏi PHUCgpt bất kỳ câu hỏi, bài tập hoặc kiến thức nào cần giải đáp...")
 
     if prompt or uploaded_file or audio_bytes:
-        full_user_input = (st.session_state.input_buffer + " " + prompt).strip() if prompt else st.session_state.input_buffer.strip()
-        user_msg = full_user_input if full_user_input else "[Yêu cầu kèm tệp/ghi âm]"
-        
-        st.session_state.input_buffer = ""
+        user_msg = prompt if prompt else "[Yêu cầu kèm tệp/ghi âm]"
         
         c = conn.cursor()
         c.execute("INSERT INTO messages (session_id, role, content) VALUES (?, ?, ?)", (st.session_state.current_session_id, "user", user_msg))
@@ -589,9 +556,8 @@ with tab_note:
             text_color = st.color_picker("🎨 Màu sắc chữ:", "#D81B60")
             is_italic = st.checkbox("<i>In nghiêng văn bản</i>", value=False)
 
-        raw_text = st.text_area("Soạn thảo nội dung văn bản (Hỗ trợ Markdown & Ký hiệu):", height=200, placeholder="Nhập nội dung ghi chú tại đây...")
+        raw_text = st.text_area("Soạn thảo nội dung văn bản:", height=200, placeholder="Nhập nội dung ghi chú tại đây...")
 
-        # Xử lý định dạng thực tế
         size_val = "14px" if "Nhỏ" in st_size else ("16px" if "Vừa" in st_size else ("20px" if "Lớn" in st_size else "26px"))
         weight_val = "bold" if is_bold else "normal"
         style_val = "italic" if is_italic else "normal"
