@@ -14,7 +14,7 @@ except ImportError:
 
 # 1. Cấu hình Trang Streamlit
 st.set_page_config(
-    page_title="PHUCgpt - Tận Tụy Hôm Nay, Dẫn Đầu Ngày Mai",
+    page_title= PHUCgpt - "CHĂM CHỈ MỖI NGÀY, KIẾN TẠO TƯƠNG LAI",
     page_icon="🌸",
     layout="wide",
     initial_sidebar_state="expanded"
