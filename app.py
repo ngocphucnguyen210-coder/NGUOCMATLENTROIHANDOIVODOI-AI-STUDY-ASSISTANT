@@ -14,18 +14,18 @@ except ImportError:
 
 # 1. Cấu hình Trang Streamlit
 st.set_page_config(
-    page_title= PHUCgpt - "CHĂM CHỈ MỖI NGÀY, KIẾN TẠO TƯƠNG LAI",
+    page_title="PHUCgpt - Chăm chỉ mỗi ngày, kiến tạo tương lai",
     page_icon="🌸",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# LOGO CHÍNH THỨC CỦA PHÚC (CHÚ GẤU LEO NÚI TRI THỨC Y CHANG 100%)
+# LOGO CHÍNH THỨC CỦA PHÚC (CHÚ GẤU LEO NÚI TRI THỨC)
 OFFICIAL_LOGO_URL = "https://raw.githubusercontent.com/nguocmatlentroihandoivodoi-ai-study-assistant/main/logo.png"
 
 # 2. Khởi tạo Database SQLite
 def init_db():
-    conn = sqlite3.connect('phucgpt_app_v5.db', check_same_thread=False)
+    conn = sqlite3.connect('phucgpt_app_v6.db', check_same_thread=False)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, provider TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, title TEXT)''')
@@ -64,7 +64,7 @@ if "timer_accumulated" not in st.session_state:
 
 TRANSLATIONS_DICT = {
     "Tiếng Việt 🇻🇳": {
-        "slogan": "PhucGPT: Tận tụy hôm nay, dẫn đầu ngày mai.",
+        "slogan": "PHUCgpt - Chăm chỉ mỗi ngày, kiến tạo tương lai",
         "tab_chat": "💬 Trợ lý PHUCgpt",
         "tab_timer": "⏱️ Đồng Hồ Bấm Giờ Học Real-time",
         "tab_calendar": "📅 Lịch & Sự Kiện / Sinh Nhật",
@@ -84,7 +84,7 @@ TRANSLATIONS_DICT = {
         "join_video": "📹 Tham gia Phòng Video Call & Audio Call Nhóm Trực Tuyến ↗"
     },
     "English 🇬🇧": {
-        "slogan": "PhucGPT: Dedicated today, leading tomorrow.",
+        "slogan": "PHUCgpt - Study hard every day, shape the future",
         "tab_chat": "💬 PHUCgpt Assistant",
         "tab_timer": "⏱️ Real-time Study Stopwatch",
         "tab_calendar": "📅 Calendar & Events / Birthdays",
@@ -431,185 +431,4 @@ with tab_calendar:
         selected_date = st.date_input("📆 Chọn ngày:", datetime.date.today())
         holidays_dict = {
             "01-01": "🎆 Tết Dương Lịch", "02-03": "🚩 Ngày thành lập Đảng CCSVN",
-            "03-08": "💐 Quốc tế Phụ nữ", "03-26": "🔥 Ngày thành lập Đoàn TNCS",
-            "04-30": "🇻🇳 Ngày Giải phóng miền Nam", "05-01": "🛠️ Quốc tế Lao động",
-            "05-19": "⭐ Sinh nhật Bác Hồ", "09-02": "🇻🇳 Ngày Quốc khánh",
-            "10-20": "🌸 Ngày Phụ nữ Việt Nam", "11-20": "👨‍🏫 Ngày Nhà giáo Việt Nam"
-        }
-        date_key = selected_date.strftime("%m-%d")
-        if date_key in holidays_dict:
-            st.success(f"🎉 **Ngày lễ:** {holidays_dict[date_key]}")
-
-        c = conn.cursor()
-        c.execute("SELECT title, type FROM custom_events WHERE username = ? AND event_date = ?", (st.session_state.username, str(selected_date)))
-        for t, tp in c.fetchall():
-            st.write(f"- [{tp}] **{t}**")
-
-    with col_c2:
-        st.markdown("### ⚙️ Thêm Sự Kiện / Sinh Nhật Cá Nhân")
-        ev_title = st.text_input("Tên sự kiện / Sinh nhật:")
-        ev_type = st.selectbox("Loại:", ["🎂 Sinh nhật", "📚 Kiểm tra / Thi cử", "🎉 Kỷ niệm", "📌 Khác"])
-        ev_date = st.date_input("Ngày diễn ra:", datetime.date.today(), key="set_ev_d")
-        if st.button("➕ Lưu Vào Lịch"):
-            if ev_title.strip():
-                c = conn.cursor()
-                c.execute("INSERT INTO custom_events (username, event_date, title, type) VALUES (?, ?, ?, ?)", (st.session_state.username, str(ev_date), ev_title, ev_type))
-                conn.commit()
-                st.success("Đã thêm sự kiện!")
-                st.rerun()
-
-# TAB 4: TO-DO
-with tab_todo:
-    st.subheader(t_dict["tab_todo"])
-    new_task = st.text_input("Thêm nhiệm vụ mới:")
-    if st.button(t_dict["add_task"]):
-        if new_task.strip():
-            c = conn.cursor()
-            c.execute("INSERT INTO todos (username, task, done) VALUES (?, ?, 0)", (st.session_state.username, new_task))
-            conn.commit()
-            st.rerun()
-
-    st.markdown("---")
-    c = conn.cursor()
-    c.execute("SELECT id, task, done FROM todos WHERE username = ?", (st.session_state.username,))
-    for task_id, task_text, is_done in c.fetchall():
-        col_a, col_b = st.columns([4, 1])
-        with col_a:
-            st.write(f"{'✅ ~~' + task_text + '~~' if is_done else '📌 ' + task_text}")
-        with col_b:
-            if not is_done and st.button("Hoàn thành", key=f"done_{task_id}"):
-                c.execute("UPDATE todos SET done = 1 WHERE id = ?", (task_id,))
-                conn.commit()
-                st.rerun()
-            elif st.button("Xóa", key=f"del_td_{task_id}"):
-                c.execute("DELETE FROM todos WHERE id = ?", (task_id,))
-                conn.commit()
-                st.rerun()
-
-# TAB 5: NHÓM
-with tab_group:
-    st.subheader(t_dict["tab_group"])
-    st.markdown(f'<a href="https://meet.jit.si/PHUCgpt_PhongHocNhomChung_DongHa" target="_blank"><button style="width:100%; background:#4CAF50; color:white; padding:15px; border-radius:12px; font-weight:bold; font-size:18px; border:none; cursor:pointer;">{t_dict["join_video"]}</button></a>', unsafe_allow_html=True)
-    
-    st.markdown("---")
-    st.markdown("### 💬 Trò chuyện nhóm chung")
-    g_input = st.text_input("Nhập tin nhắn nhóm:")
-    if st.button("Gửi tin nhắn"):
-        if g_input.strip():
-            c = conn.cursor()
-            c.execute("INSERT INTO group_chats (sender, content, timestamp) VALUES (?, ?, ?)", (st.session_state.username, g_input, datetime.datetime.now().strftime("%H:%M")))
-            conn.commit()
-            st.rerun()
-
-    c = conn.cursor()
-    c.execute("SELECT sender, content, timestamp FROM group_chats ORDER BY id DESC LIMIT 20")
-    for s, ct, ts in c.fetchall():
-        st.markdown(f"**[{ts}] {s}**: {ct}")
-
-# TAB 6: NOTE WORD THẬT 100% HIỂN THỊ TRỰC TIẾP LẬP TỨC
-with tab_note:
-    st.subheader("🎨 Trình Soạn Thảo Ghi Chú Word & Canvas Bảng Vẽ")
-    
-    note_mode = st.radio("Chọn chế độ Ghi Chú:", ["📝 Trình Soạn Thảo Word Lập Tức", "🖌️ Bảng Vẽ Trực Tiếp Canvas"], horizontal=True)
-    
-    if note_mode == "📝 Trình Soạn Thảo Word Lập Tức":
-        st.markdown("### 🔤 Bảng Điều Khiển Định Dạng Word")
-        
-        col_w1, col_w2, col_w3 = st.columns(3)
-        with col_w1:
-            st_align = st.selectbox("Căn lề (Alignment):", ["Trái (Left)", "Giữa (Center)", "Phải (Right)"])
-            st_font_size = st.slider("Cỡ chữ (Font Size):", 12, 36, 16)
-        with col_w2:
-            st_heading = st.selectbox("Kiểu tiêu đề:", ["Thường", "Tiêu đề lớn (H1)", "Tiêu đề vừa (H2)"])
-            st_color = st.color_picker("🎨 Màu chữ:", "#D81B60")
-        with col_w3:
-            st_style = st.multiselect("Kiểu chữ:", ["In đậm (Bold)", "In nghiêng (Italic)", "Gạch chân"])
-            st_table = st.checkbox("➕ Chèn Bảng Kẻ Ô Word")
-
-        note_title = st.text_input("Tiêu đề Ghi chú:", placeholder="Nhập tiêu đề...")
-        raw_text = st.text_area("Nội dung văn bản:", height=150, placeholder="Soạn nội dung ghi chú...")
-
-        # Xử lý CSS/Markdown thật 100%
-        align_css = "left" if "Trái" in st_align else ("center" if "Giữa" in st_align else "right")
-        bold_css = "font-weight: bold;" if "In đậm (Bold)" in st_style else ""
-        italic_css = "font-style: italic;" if "In nghiêng (Italic)" in st_style else ""
-        underline_css = "text-decoration: underline;" if "Gạch chân" in st_style else ""
-        
-        preview_html = f"""
-        <div style="text-align: {align_css}; font-size: {st_font_size}px; color: {st_color}; {bold_css} {italic_css} {underline_css} background: #FFFFFF; padding: 15px; border-radius: 10px; border: 1px solid #FF80AB; margin-top: 10px;">
-            {raw_text if raw_text else "Văn bản xem trước..."}
-        </div>
-        """
-        
-        if st_table:
-            preview_html += """
-            <br>
-            <table style="width:100%; border-collapse: collapse; border: 1px solid #FF80AB; background: white;">
-              <tr style="background:#FFE4E1;">
-                <th style="border: 1px solid #FF80AB; padding: 8px;">Cột 1</th>
-                <th style="border: 1px solid #FF80AB; padding: 8px;">Cột 2</th>
-              </tr>
-              <tr>
-                <td style="border: 1px solid #FF80AB; padding: 8px;">Dữ liệu A</td>
-                <td style="border: 1px solid #FF80AB; padding: 8px;">Dữ liệu B</td>
-              </tr>
-            </table>
-            """
-
-        st.markdown("### 👁️ Hiển Thị Trực Tiếp (Live Preview):")
-        st.markdown(preview_html, unsafe_allow_html=True)
-
-        if st.button("💾 Lưu Ghi Chú Word Này"):
-            if note_title.strip() and raw_text.strip():
-                c = conn.cursor()
-                now_str = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
-                c.execute("INSERT INTO user_notes (username, title, content, updated_at) VALUES (?, ?, ?, ?)", 
-                          (st.session_state.username, note_title, preview_html, now_str))
-                conn.commit()
-                st.success("Đã lưu Ghi chú thành công!")
-                st.rerun()
-
-    else:
-        st.markdown("### 🖌️ Bảng Vẽ Trực Tiếp Canvas")
-        if CANVAS_AVAILABLE:
-            col_p1, col_p2, col_p3 = st.columns(3)
-            with col_p1:
-                drawing_mode = st.selectbox("Công cụ vẽ:", ["freedraw", "line", "rect", "circle"])
-            with col_p2:
-                stroke_width = st.slider("Nét bút:", 1, 20, 4)
-            with col_p3:
-                stroke_color = st.color_picker("🎨 Màu cọ:", "#D81B60")
-
-            draw_title = st.text_input("Tiêu đề Bức vẽ:", placeholder="Nhập tiêu đề...")
-
-            canvas_result = st_canvas(
-                fill_color="rgba(255, 165, 0, 0.3)",
-                stroke_width=stroke_width,
-                stroke_color=stroke_color,
-                background_color="#FFFFFF",
-                height=300,
-                drawing_mode=drawing_mode,
-                key="canvas",
-            )
-
-            if st.button("💾 Lưu Bức Vẽ"):
-                if draw_title.strip():
-                    c = conn.cursor()
-                    now_str = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
-                    c.execute("INSERT INTO user_drawings (username, title, image_data, updated_at) VALUES (?, ?, ?, ?)", 
-                              (st.session_state.username, draw_title, "Saved Canvas", now_str))
-                    conn.commit()
-                    st.success("Đã lưu bức vẽ!")
-                    st.rerun()
-
-    st.markdown("---")
-    st.subheader("📂 Danh Sách Ghi Chú Đã Lưu")
-    c = conn.cursor()
-    c.execute("SELECT id, title, content, updated_at FROM user_notes WHERE username = ? ORDER BY id DESC", (st.session_state.username,))
-    for nid, ntitle, nct, nup in c.fetchall():
-        with st.expander(f"📝 {ntitle} ({nup})"):
-            st.markdown(nct, unsafe_allow_html=True)
-            if st.button("🗑️ Xóa Note", key=f"del_n_{nid}"):
-                c.execute("DELETE FROM user_notes WHERE id = ?", (nid,))
-                conn.commit()
-                st.rerun()
+            "03-08": "💐 Quốc tế Phụ nữ", "03-26": "🔥 Ngày
