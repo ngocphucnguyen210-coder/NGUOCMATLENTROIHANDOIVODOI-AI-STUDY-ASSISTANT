@@ -6,7 +6,6 @@ import streamlit as st
 from audio_recorder_streamlit import audio_recorder
 from ai_engine import AILearningEngine
 
-# Bổ sung thư viện bảng vẽ canvas
 try:
     from streamlit_drawable_canvas import st_canvas
     CANVAS_AVAILABLE = True
@@ -21,9 +20,12 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# LOGO CHÍNH THỨC CỦA PHÚC (CHÚ GẤU LEO NÚI TRI THỨC Y CHANG 100%)
+OFFICIAL_LOGO_URL = "https://raw.githubusercontent.com/nguocmatlentroihandoivodoi-ai-study-assistant/main/logo.png"
+
 # 2. Khởi tạo Database SQLite
 def init_db():
-    conn = sqlite3.connect('phucgpt_app_v4.db', check_same_thread=False)
+    conn = sqlite3.connect('phucgpt_app_v5.db', check_same_thread=False)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, provider TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, title TEXT)''')
@@ -53,7 +55,6 @@ if "custom_bg_base64" not in st.session_state:
 if "language" not in st.session_state:
     st.session_state.language = "Tiếng Việt 🇻🇳"
 
-# Session State Đồng hồ
 if "timer_running" not in st.session_state:
     st.session_state.timer_running = False
 if "timer_start_time" not in st.session_state:
@@ -61,7 +62,6 @@ if "timer_start_time" not in st.session_state:
 if "timer_accumulated" not in st.session_state:
     st.session_state.timer_accumulated = 0
 
-# TỪ ĐIỂN CHUYỂN ĐỔI NGÔN NGỮ GIAO DIỆN (SLOGAN MỚI)
 TRANSLATIONS_DICT = {
     "Tiếng Việt 🇻🇳": {
         "slogan": "PhucGPT: Tận tụy hôm nay, dẫn đầu ngày mai.",
@@ -102,46 +102,6 @@ TRANSLATIONS_DICT = {
         "save_timer": "💾 Save Study Time",
         "add_task": "➕ Add to list",
         "join_video": "📹 Join Online Video & Audio Group Call ↗"
-    },
-    "한국어 🇰🇷": {
-        "slogan": "PhucGPT: 오늘 헌신하고, 내일 앞서가다.",
-        "tab_chat": "💬 PHUCgpt 어시스턴트",
-        "tab_timer": "⏱️ 실시간 타이머",
-        "tab_calendar": "📅 달력 및 이벤트/생일",
-        "tab_todo": "📝 할 일 목록",
-        "tab_group": "👥 그룹 채팅 및 화상 통화",
-        "tab_note": "🎨 노트 및 그림 그리기",
-        "welcome": "🌸 환영합니다",
-        "logout": "🚪 로그아웃",
-        "new_chat": "✨ + 새 대화 시작",
-        "search_chat": "🔍 대화 검색...",
-        "chat_history": "📂 대화 기록",
-        "start_timer": "▶️ 시작",
-        "pause_timer": "⏸️ 일시정지",
-        "reset_timer": "🔄 재설정",
-        "save_timer": "💾 학습 시간 저장",
-        "add_task": "➕ 추가",
-        "join_video": "📹 화상 통화 참여하기 ↗"
-    },
-    "日本語 🇯🇵": {
-        "slogan": "PhucGPT: 今日は献身的に、明日はリードする。",
-        "tab_chat": "💬 PHUCgpt アシスタント",
-        "tab_timer": "⏱️ リアルタイム学習タイマー",
-        "tab_calendar": "📅 カレンダーとイベント/誕生日",
-        "tab_todo": "📝 To-Do リスト",
-        "tab_group": "👥 グループチャット＆ビデオ通話",
-        "tab_note": "🎨 ノート＆お絵かき",
-        "welcome": "🌸 ようこそ",
-        "logout": "🚪 ログアウト",
-        "new_chat": "✨ + 新しいチャット",
-        "search_chat": "🔍 チャット履歴を検索...",
-        "chat_history": "📂 チャット履歴",
-        "start_timer": "▶️ スタート",
-        "pause_timer": "⏸️ 一時停止",
-        "reset_timer": "🔄 リセット",
-        "save_timer": "💾 学習時間を保存",
-        "add_task": "➕ 追加",
-        "join_video": "📹 ビデオ通話に参加 ↗"
     }
 }
 
@@ -161,10 +121,9 @@ if st.session_state.custom_bg_base64:
 else:
     active_bg_css = bg_preset_styles[st.session_state.bg_theme]
 
-# STYLESHEET - NÂNG CẤP FONT CHỮ PHUCgpt NỔI BẬT & ĐẸP NGHỆ THUẬT
 st.markdown(f"""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Pacifico&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
     
     html, body, [class*="css"] {{ font-family: 'Plus Jakarta Sans', sans-serif; }}
     .stApp {{ {active_bg_css} }}
@@ -175,7 +134,6 @@ st.markdown(f"""
         100% {{ background-position: 0% 50%; }}
     }}
 
-    /* CSS FIX SIDEBAR */
     [data-testid="stSidebar"] {{
         background-color: rgba(255, 255, 255, 0.96) !important;
         backdrop-filter: blur(12px);
@@ -198,37 +156,23 @@ st.markdown(f"""
         margin: auto;
     }}
 
-    /* HIỆU ỨNG FONT CHỮ LOGO PHUCgpt NỔI BẬT 3D CHUYỂN MÀU GRADIENT */
     .brand-title-fancy {{
-        font-family: 'Fredoka', 'Pacifico', cursive;
-        font-size: 48px;
+        font-family: 'Fredoka', sans-serif;
+        font-size: 46px;
         font-weight: 700;
         text-align: center;
-        background: linear-gradient(135deg, #FF1744, #D81B60, #FF4081, #FF80AB);
-        background-size: 300% 300%;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        animation: textGradient 4s ease infinite;
-        filter: drop-shadow(2px 4px 6px rgba(216, 27, 96, 0.3));
-        letter-spacing: 1px;
+        color: #D81B60;
         margin-top: 5px;
         margin-bottom: 0px;
     }}
 
-    @keyframes textGradient {{
-        0% {{ background-position: 0% 50%; }}
-        50% {{ background-position: 100% 50%; }}
-        100% {{ background-position: 0% 50%; }}
-    }}
-
     .brand-slogan-new {{
         color: #C2185B !important;
-        font-size: 16px;
+        font-size: 15px;
         font-weight: 700;
         font-style: italic;
         text-align: center;
         margin-bottom: 20px;
-        letter-spacing: 0.5px;
     }}
     
     [data-testid="stChatMessageUser"] {{ background: linear-gradient(135deg, #FF80AB 0%, #FF4081 100%) !important; color: white !important; border-radius: 20px 20px 4px 20px !important; }}
@@ -242,15 +186,13 @@ st.markdown(f"""
         border: 3px solid #FF80AB; box-shadow: 0 8px 25px rgba(216, 27, 96, 0.15);
     }}
     
-    .logo-img-fix {{
-        border-radius: 50%;
-        border: 3px solid #FF80AB;
-        box-shadow: 0 8px 20px rgba(216, 27, 96, 0.25);
+    .logo-official-img {{
+        max-width: 130px;
+        border-radius: 20px;
+        box-shadow: 0 8px 20px rgba(216, 27, 96, 0.2);
     }}
 </style>
 """, unsafe_allow_html=True)
-
-GAU_LOGO_URL = "https://cdn-icons-png.flaticon.com/512/869/869840.png"
 
 # --- MÀN HÌNH ĐĂNG NHẬP ---
 if not st.session_state.logged_in:
@@ -260,7 +202,7 @@ if not st.session_state.logged_in:
         st.markdown(f"""
         <div class="login-card">
             <div style="text-align:center;">
-                <img src="{GAU_LOGO_URL}" width="110" class="logo-img-fix">
+                <img src="{OFFICIAL_LOGO_URL}" class="logo-official-img" onerror="this.src='https://cdn-icons-png.flaticon.com/512/869/869840.png'">
             </div>
             <div class="brand-title-fancy">PHUCgpt</div>
             <div class="brand-slogan-new">"{t_dict['slogan']}"</div>
@@ -294,7 +236,7 @@ ai_engine = AILearningEngine()
 
 # --- SIDEBAR ---
 with st.sidebar:
-    st.markdown(f'<div style="text-align:center;"><img src="{GAU_LOGO_URL}" width="95" class="logo-img-fix"></div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="text-align:center;"><img src="{OFFICIAL_LOGO_URL}" class="logo-official-img" width="110" onerror="this.src=\'https://cdn-icons-png.flaticon.com/512/869/869840.png\'"></div>', unsafe_allow_html=True)
     st.markdown(f"<h3 style='text-align: center;'>{t_dict['welcome']}, {st.session_state.username}</h3>", unsafe_allow_html=True)
     
     if st.button(t_dict["logout"], use_container_width=True):
@@ -358,12 +300,6 @@ with st.sidebar:
                 conn.commit()
                 st.rerun()
 
-    st.markdown("---")
-    st.subheader("🎙️ Giọng đọc AI Voice")
-    voice_gender = st.selectbox("Giới tính:", ["Nữ", "Nam"])
-    voice_region = st.selectbox("Vùng miền:", ["Miền Bắc 🇻🇳", "Miền Trung 🇻🇳", "Miền Nam 🇻🇳"])
-    voice_config = f"{voice_gender} - {voice_region}"
-
 # --- KHUNG TABS CHÍNH ---
 tab_chat, tab_timer, tab_calendar, tab_todo, tab_group, tab_note = st.tabs([
     t_dict["tab_chat"], 
@@ -374,7 +310,7 @@ tab_chat, tab_timer, tab_calendar, tab_todo, tab_group, tab_note = st.tabs([
     t_dict["tab_note"]
 ])
 
-# TAB 1: AI CHAT (FONT CHỮ PHUCgpt TÙY CHỈNH NỔI BẬT)
+# TAB 1: AI CHAT
 with tab_chat:
     st.markdown(f"""
         <div style="text-align: center;">
@@ -428,17 +364,15 @@ with tab_chat:
                     prompt=user_msg, 
                     file_attachment=uploaded_file, 
                     file_type=uploaded_file.type if uploaded_file else None,
-                    lang=st.session_state.language,
-                    voice_config=voice_config
+                    lang=st.session_state.language
                 )
                 st.markdown(response)
                 c.execute("INSERT INTO messages (session_id, role, content) VALUES (?, ?, ?)", (st.session_state.current_session_id, "bot", response))
                 conn.commit()
 
-# TAB 2: ĐỒNG HỒ BẤM GIỜ TỰ ĐỘNG CHẠY REAL-TIME
+# TAB 2: BẤM GIỜ
 with tab_timer:
     st.subheader(t_dict["tab_timer"])
-    
     col_t1, col_t2 = st.columns([1, 1])
     with col_t1:
         timer_subject = st.selectbox("Chọn môn học bấm giờ:", ["Ngữ Văn", "Toán Học", "Vật Lý", "Tiếng Anh", "Lịch Sử", "Hóa Học", "Sinh Học", "Khác"])
@@ -450,7 +384,6 @@ with tab_timer:
 
     mins, secs = divmod(int(elapsed), 60)
     hours, mins = divmod(mins, 60)
-    
     st.markdown(f'<div class="timer-card">⏱️ {hours:02d}:{mins:02d}:{secs:02d}</div>', unsafe_allow_html=True)
 
     b1, b2, b3, b4 = st.columns(4)
@@ -490,11 +423,10 @@ with tab_timer:
         time.sleep(1)
         st.rerun()
 
-# TAB 3: LỊCH VẠN NĂNG
+# TAB 3: LỊCH
 with tab_calendar:
     st.subheader(t_dict["tab_calendar"])
     col_c1, col_c2 = st.columns([1, 1])
-    
     with col_c1:
         selected_date = st.date_input("📆 Chọn ngày:", datetime.date.today())
         holidays_dict = {
@@ -526,7 +458,7 @@ with tab_calendar:
                 st.success("Đã thêm sự kiện!")
                 st.rerun()
 
-# TAB 4: TO-DO LIST
+# TAB 4: TO-DO
 with tab_todo:
     st.subheader(t_dict["tab_todo"])
     new_task = st.text_input("Thêm nhiệm vụ mới:")
@@ -554,29 +486,12 @@ with tab_todo:
                 conn.commit()
                 st.rerun()
 
-# TAB 5: NHÓM CHAT CHUNG CÔNG KHAI
+# TAB 5: NHÓM
 with tab_group:
     st.subheader(t_dict["tab_group"])
-    
-    st.markdown(f"""
-    <a href="https://meet.jit.si/PHUCgpt_PhongHocNhomChung_DongHa" target="_blank">
-        <button style="width:100%; background:#4CAF50; color:white; padding:15px; border-radius:12px; font-weight:bold; font-size:18px; border:none; cursor:pointer;">
-            {t_dict['join_video']}
-        </button>
-    </a>
-    """, unsafe_allow_html=True)
+    st.markdown(f'<a href="https://meet.jit.si/PHUCgpt_PhongHocNhomChung_DongHa" target="_blank"><button style="width:100%; background:#4CAF50; color:white; padding:15px; border-radius:12px; font-weight:bold; font-size:18px; border:none; cursor:pointer;">{t_dict["join_video"]}</button></a>', unsafe_allow_html=True)
     
     st.markdown("---")
-    st.markdown("### 🎨 Gửi Sticker")
-    stk_cols = st.columns(4)
-    stickers = ["🌸 Tố chất!", "🔥 Quyết chiến!", "📚 Học bài thôi!", "💯 10 Điểm!"]
-    for i, stk in enumerate(stickers):
-        if stk_cols[i].button(stk):
-            c = conn.cursor()
-            c.execute("INSERT INTO group_chats (sender, content, timestamp) VALUES (?, ?, ?)", (st.session_state.username, f"[Sticker]: {stk}", datetime.datetime.now().strftime("%H:%M")))
-            conn.commit()
-            st.rerun()
-
     st.markdown("### 💬 Trò chuyện nhóm chung")
     g_input = st.text_input("Nhập tin nhắn nhóm:")
     if st.button("Gửi tin nhắn"):
@@ -591,105 +506,110 @@ with tab_group:
     for s, ct, ts in c.fetchall():
         st.markdown(f"**[{ts}] {s}**: {ct}")
 
-# TAB 6: NOTE & VẼ CANVAS TRỰC TIẾP & TRÌNH SOẠN THẢO WORD
+# TAB 6: NOTE WORD THẬT 100% HIỂN THỊ TRỰC TIẾP LẬP TỨC
 with tab_note:
-    st.subheader("🎨 Note & Bút Vẽ Đa Năng (Canvas Drawing & Word Formatting)")
+    st.subheader("🎨 Trình Soạn Thảo Ghi Chú Word & Canvas Bảng Vẽ")
     
-    note_mode = st.radio("Chọn chế độ Ghi Chú:", ["📝 Soạn thảo Văn Bản Word", "🖌️ Bảng Vẽ Trực Tiếp (Interactive Canvas)"], horizontal=True)
+    note_mode = st.radio("Chọn chế độ Ghi Chú:", ["📝 Trình Soạn Thảo Word Lập Tức", "🖌️ Bảng Vẽ Trực Tiếp Canvas"], horizontal=True)
     
-    if note_mode == "📝 Soạn thảo Văn Bản Word":
-        st.markdown("### 🔤 Trình Soạn Thảo Định Dạng Word")
+    if note_mode == "📝 Trình Soạn Thảo Word Lập Tức":
+        st.markdown("### 🔤 Bảng Điều Khiển Định Dạng Word")
         
-        col_w1, col_w2, col_w3, col_w4 = st.columns(4)
+        col_w1, col_w2, col_w3 = st.columns(3)
         with col_w1:
             st_align = st.selectbox("Căn lề (Alignment):", ["Trái (Left)", "Giữa (Center)", "Phải (Right)"])
+            st_font_size = st.slider("Cỡ chữ (Font Size):", 12, 36, 16)
         with col_w2:
-            st_heading = st.selectbox("Kiểu tiêu đề (Header):", ["Văn bản thường", "Tiêu đề lớn (H1)", "Tiêu đề vừa (H2)", "Tiêu đề nhỏ (H3)"])
+            st_heading = st.selectbox("Kiểu tiêu đề:", ["Thường", "Tiêu đề lớn (H1)", "Tiêu đề vừa (H2)"])
+            st_color = st.color_picker("🎨 Màu chữ:", "#D81B60")
         with col_w3:
-            st_table = st.checkbox("➕ Thêm Kẻ Ô / Bảng Word (Table)")
-        with col_w4:
-            st_style = st.multiselect("Định dạng chữ:", ["In đậm (Bold)", "In nghiêng (Italic)", "Gạch ngang"])
+            st_style = st.multiselect("Kiểu chữ:", ["In đậm (Bold)", "In nghiêng (Italic)", "Gạch chân"])
+            st_table = st.checkbox("➕ Chèn Bảng Kẻ Ô Word")
 
-        note_title = st.text_input("Tiêu đề Ghi chú Word:", placeholder="Nhập tiêu đề...")
-        raw_text = st.text_area("Nội dung văn bản:", height=180, placeholder="Soạn thảo nội dung ghi chú...")
+        note_title = st.text_input("Tiêu đề Ghi chú:", placeholder="Nhập tiêu đề...")
+        raw_text = st.text_area("Nội dung văn bản:", height=150, placeholder="Soạn nội dung ghi chú...")
 
-        formatted_text = raw_text
-        if "In đậm (Bold)" in st_style:
-            formatted_text = f"**{formatted_text}**"
-        if "In nghiêng (Italic)" in st_style:
-            formatted_text = f"*{formatted_text}*"
-        if "Gạch ngang" in st_style:
-            formatted_text = f"~~{formatted_text}~~"
-
-        if st_align == "Giữa (Center)":
-            formatted_text = f"<div style='text-align: center;'>{formatted_text}</div>"
-        elif st_align == "Phải (Right)":
-            formatted_text = f"<div style='text-align: right;'>{formatted_text}</div>"
-
-        if st_heading == "Tiêu đề lớn (H1)":
-            formatted_text = f"# {formatted_text}"
-        elif st_heading == "Tiêu đề vừa (H2)":
-            formatted_text = f"## {formatted_text}"
-        elif st_heading == "Tiêu đề nhỏ (H3)":
-            formatted_text = f"### {formatted_text}"
-
+        # Xử lý CSS/Markdown thật 100%
+        align_css = "left" if "Trái" in st_align else ("center" if "Giữa" in st_align else "right")
+        bold_css = "font-weight: bold;" if "In đậm (Bold)" in st_style else ""
+        italic_css = "font-style: italic;" if "In nghiêng (Italic)" in st_style else ""
+        underline_css = "text-decoration: underline;" if "Gạch chân" in st_style else ""
+        
+        preview_html = f"""
+        <div style="text-align: {align_css}; font-size: {st_font_size}px; color: {st_color}; {bold_css} {italic_css} {underline_css} background: #FFFFFF; padding: 15px; border-radius: 10px; border: 1px solid #FF80AB; margin-top: 10px;">
+            {raw_text if raw_text else "Văn bản xem trước..."}
+        </div>
+        """
+        
         if st_table:
-            formatted_text += "\n\n| Cột 1 | Cột 2 | Cột 3 |\n| --- | --- | --- |\n| Dữ liệu 1 | Dữ liệu 2 | Dữ liệu 3 |"
+            preview_html += """
+            <br>
+            <table style="width:100%; border-collapse: collapse; border: 1px solid #FF80AB; background: white;">
+              <tr style="background:#FFE4E1;">
+                <th style="border: 1px solid #FF80AB; padding: 8px;">Cột 1</th>
+                <th style="border: 1px solid #FF80AB; padding: 8px;">Cột 2</th>
+              </tr>
+              <tr>
+                <td style="border: 1px solid #FF80AB; padding: 8px;">Dữ liệu A</td>
+                <td style="border: 1px solid #FF80AB; padding: 8px;">Dữ liệu B</td>
+              </tr>
+            </table>
+            """
 
-        if st.button("💾 Lưu Ghi Chú Word"):
+        st.markdown("### 👁️ Hiển Thị Trực Tiếp (Live Preview):")
+        st.markdown(preview_html, unsafe_allow_html=True)
+
+        if st.button("💾 Lưu Ghi Chú Word Này"):
             if note_title.strip() and raw_text.strip():
                 c = conn.cursor()
                 now_str = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
                 c.execute("INSERT INTO user_notes (username, title, content, updated_at) VALUES (?, ?, ?, ?)", 
-                          (st.session_state.username, note_title, formatted_text, now_str))
+                          (st.session_state.username, note_title, preview_html, now_str))
                 conn.commit()
-                st.success("Đã lưu Ghi chú Word!")
+                st.success("Đã lưu Ghi chú thành công!")
                 st.rerun()
 
     else:
-        st.markdown("### 🖌️ Bảng Vẽ Trực Tiếp Bằng Cọ / Bút Vô Hạn Màu")
-        
+        st.markdown("### 🖌️ Bảng Vẽ Trực Tiếp Canvas")
         if CANVAS_AVAILABLE:
             col_p1, col_p2, col_p3 = st.columns(3)
             with col_p1:
-                drawing_mode = st.selectbox("Chọn Bút / Công cụ vẽ:", ["freedraw", "line", "rect", "circle", "transform"])
+                drawing_mode = st.selectbox("Công cụ vẽ:", ["freedraw", "line", "rect", "circle"])
             with col_p2:
-                stroke_width = st.slider("Độ to nét bút (Width):", 1, 25, 4)
+                stroke_width = st.slider("Nét bút:", 1, 20, 4)
             with col_p3:
-                stroke_color = st.color_picker("🎨 Màu cọ vẽ (Tất cả màu thế giới):", "#D81B60")
+                stroke_color = st.color_picker("🎨 Màu cọ:", "#D81B60")
 
-            draw_title = st.text_input("Tiêu đề Bức vẽ Canvas:", placeholder="Ví dụ: Sơ đồ tư duy bài Văn...")
+            draw_title = st.text_input("Tiêu đề Bức vẽ:", placeholder="Nhập tiêu đề...")
 
             canvas_result = st_canvas(
                 fill_color="rgba(255, 165, 0, 0.3)",
                 stroke_width=stroke_width,
                 stroke_color=stroke_color,
                 background_color="#FFFFFF",
-                height=350,
+                height=300,
                 drawing_mode=drawing_mode,
                 key="canvas",
             )
 
-            if st.button("💾 Lưu Bức Vẽ Canvas"):
-                if draw_title.strip() and canvas_result.image_data is not None:
+            if st.button("💾 Lưu Bức Vẽ"):
+                if draw_title.strip():
                     c = conn.cursor()
                     now_str = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
                     c.execute("INSERT INTO user_drawings (username, title, image_data, updated_at) VALUES (?, ?, ?, ?)", 
-                              (st.session_state.username, draw_title, "Saved Canvas Image", now_str))
+                              (st.session_state.username, draw_title, "Saved Canvas", now_str))
                     conn.commit()
-                    st.success(f"Đã lưu thành công Bức vẽ '{draw_title}' vào Database!")
+                    st.success("Đã lưu bức vẽ!")
                     st.rerun()
-        else:
-            st.warning("⚠️ Để dùng bảng vẽ trực tiếp, vui lòng thêm `streamlit-drawable-canvas` vào file `requirements.txt` trên GitHub!")
 
     st.markdown("---")
-    st.subheader("📂 Danh Sách Ghi Chú & Bức Vẽ Đã Lưu")
+    st.subheader("📂 Danh Sách Ghi Chú Đã Lưu")
     c = conn.cursor()
     c.execute("SELECT id, title, content, updated_at FROM user_notes WHERE username = ? ORDER BY id DESC", (st.session_state.username,))
     for nid, ntitle, nct, nup in c.fetchall():
         with st.expander(f"📝 {ntitle} ({nup})"):
             st.markdown(nct, unsafe_allow_html=True)
-            if st.button("🗑️ Xóa", key=f"del_n_{nid}"):
+            if st.button("🗑️ Xóa Note", key=f"del_n_{nid}"):
                 c.execute("DELETE FROM user_notes WHERE id = ?", (nid,))
                 conn.commit()
                 st.rerun()
