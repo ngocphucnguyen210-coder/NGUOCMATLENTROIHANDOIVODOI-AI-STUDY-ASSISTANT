@@ -300,6 +300,6 @@ with st.sidebar:
                 st.rerun()
 
 # --- KHUNG TABS CHÍNH ---
-tab_chat, tab_timer, tab_calendar, tab_todo, tab_group, tab_note = st.tabs([
+tab_chat, tab_timer, tab_calendar, tab_todo, tab_group, tab_note = st.tabs
     t_dict["tab_chat"], 
     t_dict["tab_timer"],
